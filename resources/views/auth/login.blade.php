@@ -126,11 +126,11 @@
             <!-- RIGHT PANEL: LOGIN FORM (7 Cols) -->
             <div class="md:col-span-7 p-8 sm:p-12 flex flex-col justify-center relative min-h-[500px]">
                 
-                <!-- Help Button (Top-Right) -->
-                <div class="absolute top-6 right-8">
-                    <a href="#" class="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-[11px] font-bold rounded-full shadow-xs transition">
-                        <span class="material-symbols-outlined text-sm">help</span>
-                        Butuh Bantuan?
+                <!-- Top-Right Actions -->
+                <div class="absolute top-6 right-8 flex items-center gap-2">
+                    <a href="{{ route('register') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 border border-indigo-200 text-indigo-700 bg-indigo-50/60 hover:bg-indigo-100/60 text-[11px] font-bold rounded-full shadow-xs transition">
+                        <span class="material-symbols-outlined text-sm">school</span>
+                        Daftar Siswa
                     </a>
                 </div>
 
@@ -164,21 +164,21 @@
                     <form method="POST" action="{{ route('login') }}" class="space-y-4">
                         @csrf
 
-                        <!-- Nama Pengguna (Email) -->
+                        <!-- Nama Pengguna / Email -->
                         <div>
-                            <label for="email" class="block text-gray-700 text-xs font-bold mb-2 uppercase tracking-wide">Nama Pengguna</label>
-                            <div class="flex rounded-xl shadow-md overflow-hidden bg-white border @error('email') border-red-500 @else border-gray-100 @enderror focus-within:ring-2 focus-within:ring-indigo-150 transition-all duration-300">
+                            <label for="login" class="block text-gray-700 text-xs font-bold mb-2 uppercase tracking-wide">Nama Pengguna / Email</label>
+                            <div class="flex rounded-xl shadow-md overflow-hidden bg-white border @if($errors->has('login') || $errors->has('email')) border-red-500 @else border-gray-100 @endif focus-within:ring-2 focus-within:ring-indigo-150 transition-all duration-300">
                                 <div class="flex items-center justify-center px-4 bg-slate-50 border-r border-gray-200/50">
                                     <span class="material-symbols-outlined text-gray-500 text-lg">person</span>
                                 </div>
-                                <input type="email" name="email" id="email" value="{{ old('email') }}" placeholder="Masukkan nama pengguna Anda" class="w-full py-3 px-4 text-gray-750 leading-tight focus:outline-none placeholder-gray-400 border-0 text-sm" required autofocus autocomplete="username">
+                                <input type="text" name="login" id="login" value="{{ old('login', old('email')) }}" placeholder="Masukkan nama pengguna atau email Anda" class="w-full py-3 px-4 text-gray-750 leading-tight focus:outline-none placeholder-gray-400 border-0 text-sm" required autofocus autocomplete="username">
                             </div>
-                            @error('email')
+                            @if($errors->has('login') || $errors->has('email'))
                                 <p class="text-red-500 text-[11px] italic mt-1.5 font-medium flex items-center gap-1">
                                     <span class="material-symbols-outlined text-[14px]">error</span>
-                                    {{ $message }}
+                                    {{ $errors->first('login') ?: $errors->first('email') }}
                                 </p>
-                            @enderror
+                            @endif
                         </div>
 
                         <!-- Kata Sandi -->
@@ -221,6 +221,14 @@
                                 MASUK
                             </button>
                         </div>
+
+                        <!-- Register Student Link -->
+                        <div class="text-center pt-2">
+                            <span class="text-xs text-gray-500">Siswa baru belum memiliki akun? </span>
+                            <a href="{{ route('register') }}" class="text-xs font-bold text-[#0d2a5c] hover:underline">
+                                Daftar di sini
+                            </a>
+                        </div>
                     </form>
 
                     <!-- OR Separator -->
@@ -232,7 +240,7 @@
 
                     <!-- Shortcut Demo Login Button -->
                     <div>
-                        <button type="button" onclick="document.getElementById('email').value='admin@lentera.test'; document.getElementById('password').value='password';" class="w-full py-3.5 border-2 border-indigo-200 hover:bg-indigo-50/20 text-[#0d2a5c] font-black rounded-xl shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-wide">
+                        <button type="button" onclick="const f=document.getElementById('login')||document.getElementById('email'); if(f) f.value='admin@lentera.test'; document.getElementById('password').value='password';" class="w-full py-3.5 border-2 border-indigo-200 hover:bg-indigo-50/20 text-[#0d2a5c] font-black rounded-xl shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-wide">
                             <span class="material-symbols-outlined text-[16px] font-bold">group</span>
                             Masuk sebagai Admin Sekolah
                         </button>

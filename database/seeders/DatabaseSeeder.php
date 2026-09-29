@@ -98,6 +98,7 @@ class DatabaseSeeder extends Seeder
             $user = User::create([
                 'role_id' => Role::SISWA,
                 'nama' => $s['nama'],
+                'username' => 'siswa' . ($i + 1),
                 'email' => 'siswa' . ($i + 1) . '@lentera.test',
                 'password' => Hash::make('password'),
             ]);
@@ -110,16 +111,8 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // 7. Modules (Pre Test, 5 Topics, Post Test)
+        // 7. Modules (5 Topics)
         $modules = [
-            [
-                'judul' => 'Pre Test',
-                'subtitle' => null,
-                'deskripsi' => 'Tes awal untuk mengukur pemahaman empati sebelum program dimulai.',
-                'fokus_utama' => null,
-                'ilustrasi' => null,
-                'urutan' => 0,
-            ],
             [
                 'judul' => 'Empathy Awareness',
                 'subtitle' => 'kesadaran terhadap bullying',
@@ -159,14 +152,6 @@ class DatabaseSeeder extends Seeder
                 'fokus_utama' => 'Menerapkan empati dalam perilaku prososial untuk menciptakan lingkungan sekolah yang aman dan inklusif.',
                 'ilustrasi' => 'topics/prosocial_behavior.png',
                 'urutan' => 5,
-            ],
-            [
-                'judul' => 'Post Test',
-                'subtitle' => null,
-                'deskripsi' => 'Tes akhir untuk mengukur perkembangan empati setelah program.',
-                'fokus_utama' => null,
-                'ilustrasi' => null,
-                'urutan' => 6,
             ],
         ];
 
@@ -238,23 +223,17 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
 
-            // Add assessment for each module
-            $jenis = match ($m['urutan']) {
-                0 => 'pre_test',
-                6 => 'post_test',
-                default => 'lkpd',
-            };
+            // Add assessment for modules 2-5 (Topik 1 is seeded by Topik1AssessmentSeeder)
+            if ($m['urutan'] > 1) {
+                $assessment = Assessment::create([
+                    'module_id' => $module->id,
+                    'judul' => 'Lembar Kerja Peserta Didik (LKPD) ' . $m['judul'],
+                    'jenis' => 'lkpd',
+                    'max_skor' => 0,
+                    'urutan' => 1,
+                ]);
 
-            $assessment = Assessment::create([
-                'module_id' => $module->id,
-                'judul' => $m['urutan'] === 0 || $m['urutan'] === 6 ? $m['judul'] : 'Lembar Kerja Peserta Didik (LKPD) ' . $m['judul'],
-                'jenis' => $jenis,
-                'max_skor' => 0,
-                'urutan' => 1,
-            ]);
-
-            // Add sample questions (3 per assessment)
-            if ($jenis === 'lkpd') {
+                // Add sample questions (3 per assessment)
                 $sampleQuestions = [
                     [
                         'question' => 'Bagian 1: Mengenali Situasi - Berdasarkan video/ilustrasi, manakah tindakan yang menunjukkan pemahaman situasi perundungan yang tepat?',
@@ -284,56 +263,31 @@ class DatabaseSeeder extends Seeder
                         ],
                     ],
                 ];
-            } else {
-                $sampleQuestions = [
-                    [
-                        'question' => 'Apa yang paling mendefinisikan empati?',
-                        'options' => [
-                            ['label' => 'A', 'option' => 'Kemampuan memahami dan merasakan emosi orang lain dari sudut pandang mereka', 'is_correct' => true],
-                            ['label' => 'B', 'option' => 'Kasihan terhadap nasib buruk orang lain tanpa bertindak', 'is_correct' => false],
-                            ['label' => 'C', 'option' => 'Kemampuan mendikte perasaan teman agar kembali ceria', 'is_correct' => false],
-                            ['label' => 'D', 'option' => 'Menghindari interaksi sosial untuk menghindari konflik', 'is_correct' => false],
-                        ],
-                    ],
-                    [
-                        'question' => 'Manakah respons terbaik jika melihat teman dibully?',
-                        'options' => [
-                            ['label' => 'A', 'option' => 'Melaporkan kejadian ke guru/konselor dan menemani korban', 'is_correct' => true],
-                            ['label' => 'B', 'option' => 'Ikut menonton agar tahu siapa yang salah', 'is_correct' => false],
-                            ['label' => 'C', 'option' => 'Mengabaikannya karena bukan urusan kita', 'is_correct' => false],
-                            ['label' => 'D', 'option' => 'Mengejek pelaku di media sosial secara anonim', 'is_correct' => false],
-                        ],
-                    ],
-                    [
-                        'question' => 'Apa manfaat menerapkan perilaku prososial di sekolah?',
-                        'options' => [
-                            ['label' => 'A', 'option' => 'Menciptakan lingkungan belajar yang aman, suportif, dan bebas perundungan', 'is_correct' => true],
-                            ['label' => 'B', 'option' => 'Mendapatkan pujian terus-menerus dari kepala sekolah', 'is_correct' => false],
-                            ['label' => 'C', 'option' => 'Membuat siswa lain merasa berutang budi', 'is_correct' => false],
-                            ['label' => 'D', 'option' => 'Menghindari semua jenis tugas akademis', 'is_correct' => false],
-                        ],
-                    ],
-                ];
-            }
 
-            foreach ($sampleQuestions as $qi => $sq) {
-                $question = Question::create([
-                    'assessment_id' => $assessment->id,
-                    'question' => $sq['question'],
-                    'type' => 'multiple_choice',
-                    'score' => 1,
-                    'urutan' => $qi + 1,
-                ]);
-
-                foreach ($sq['options'] as $opt) {
-                    QuestionOption::create([
-                        'question_id' => $question->id,
-                        'label' => $opt['label'],
-                        'option' => $opt['option'],
-                        'is_correct' => $opt['is_correct'],
+                foreach ($sampleQuestions as $qi => $sq) {
+                    $question = Question::create([
+                        'assessment_id' => $assessment->id,
+                        'question' => $sq['question'],
+                        'type' => 'multiple_choice',
+                        'score' => 1,
+                        'urutan' => $qi + 1,
                     ]);
+
+                    foreach ($sq['options'] as $opt) {
+                        QuestionOption::create([
+                            'question_id' => $question->id,
+                            'label' => $opt['label'],
+                            'option' => $opt['option'],
+                            'is_correct' => $opt['is_correct'],
+                        ]);
+                    }
                 }
             }
         }
+
+        $this->call([
+            CertificateTemplateSeeder::class,
+            Topik1AssessmentSeeder::class,
+        ]);
     }
 }

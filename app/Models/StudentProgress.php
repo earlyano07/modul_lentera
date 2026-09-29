@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'assessment_id',
     'status',
     'nilai',
+    'answers',
     'started_at',
     'finished_at',
 ])]
@@ -23,6 +24,7 @@ class StudentProgress extends Model
     {
         return [
             'nilai' => 'decimal:2',
+            'answers' => 'array',
             'started_at' => 'datetime',
             'finished_at' => 'datetime',
         ];

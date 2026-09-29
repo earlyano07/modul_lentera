@@ -27,16 +27,25 @@
                 <!-- Nama -->
                 <div>
                     <label for="nama" class="block text-gray-700 text-sm font-bold mb-2">Nama Lengkap *</label>
-                    <input type="text" name="nama" id="nama" value="{{ old('nama') }}" required class="shadow appearance-none @error('nama') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input type="text" name="nama" id="nama" value="{{ old('nama') }}" required class="shadow appearance-none @error('nama') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Nama lengkap siswa">
                     @error('nama')
+                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Username -->
+                <div>
+                    <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username (Opsional)</label>
+                    <input type="text" name="username" id="username" value="{{ old('username') }}" class="shadow appearance-none @error('username') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Dibuat otomatis jika kosong">
+                    @error('username')
                         <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <!-- Email -->
                 <div>
-                    <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email *</label>
-                    <input type="email" name="email" id="email" value="{{ old('email') }}" required class="shadow appearance-none @error('email') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email (Opsional)</label>
+                    <input type="email" name="email" id="email" value="{{ old('email') }}" class="shadow appearance-none @error('email') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="siswa@sekolah.sch.id">
                     @error('email')
                         <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                     @enderror
@@ -45,7 +54,7 @@
                 <!-- Password -->
                 <div>
                     <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password *</label>
-                    <input type="password" name="password" id="password" required class="shadow appearance-none @error('password') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input type="password" name="password" id="password" required minlength="8" class="shadow appearance-none @error('password') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                     @error('password')
                         <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                     @enderror

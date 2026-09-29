@@ -34,9 +34,9 @@
                 <div class="col-span-1">
                     <label for="jenis" class="block text-gray-700 text-sm font-bold mb-2">Jenis Assessment *</label>
                     <select name="jenis" id="jenis" required class="shadow appearance-none @error('jenis') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <option value="pre_test" {{ old('jenis', request('jenis')) == 'pre_test' ? 'selected' : '' }}>Pre Test</option>
-                        <option value="post_test" {{ old('jenis', request('jenis')) == 'post_test' ? 'selected' : '' }}>Post Test</option>
-                        <option value="lkpd" {{ old('jenis', request('jenis')) == 'lkpd' ? 'selected' : '' }}>Lembar Kerja Peserta Didik (LKPD)</option>
+                        @foreach(\App\Models\Assessment::JENIS_OPTIONS as $val => $label)
+                            <option value="{{ $val }}" {{ old('jenis', request('jenis')) == $val ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
                     </select>
                     @error('jenis')
                         <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
@@ -46,8 +46,17 @@
                 <!-- Judul -->
                 <div class="col-span-1 md:col-span-2">
                     <label for="judul" class="block text-gray-700 text-sm font-bold mb-2">Judul Assessment *</label>
-                    <input type="text" name="judul" id="judul" value="{{ old('judul') }}" required placeholder="Contoh: Pre-Test Modul 1" class="shadow appearance-none @error('judul') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input type="text" name="judul" id="judul" value="{{ old('judul') }}" required placeholder="Contoh: Refleksi Diri" class="shadow appearance-none @error('judul') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                     @error('judul')
+                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Deskripsi / Situasi Kasus -->
+                <div class="col-span-1 md:col-span-2">
+                    <label for="deskripsi" class="block text-gray-700 text-sm font-bold mb-2">Bahan Bacaan / Situasi Kasus / Pengantar Asesmen (Opsional)</label>
+                    <textarea name="deskripsi" id="deskripsi" rows="4" placeholder="Misal: Bacalah situasi berikut. Raka sering dipanggil dengan julukan..." class="shadow appearance-none @error('deskripsi') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">{{ old('deskripsi') }}</textarea>
+                    @error('deskripsi')
                         <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                     @enderror
                 </div>
@@ -60,6 +69,15 @@
                     </div>
                     <p class="mt-1.5 text-xs text-slate-400">Total skor jika semua jawaban benar.</p>
                     @error('max_skor')
+                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Catatan Tambahan / Footnote -->
+                <div class="col-span-1">
+                    <label for="catatan" class="block text-gray-700 text-sm font-bold mb-2">Catatan Penilaian / Footnote (Opsional)</label>
+                    <input type="text" name="catatan" id="catatan" value="{{ old('catatan') }}" placeholder="Misal: Catatan: Butir nomor 4 adalah pernyataan negatif sehingga skornya dibalik." class="shadow appearance-none @error('catatan') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    @error('catatan')
                         <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                     @enderror
                 </div>

@@ -22,34 +22,15 @@ class LearningController extends Controller
             ->with(['assessments.questions'])
             ->get();
             
-        // Pre-test module
-        $preTestModule = \App\Models\Module::where('urutan', 0)->first();
-        $preTest = null;
-        $preTestCompleted = false;
-        if ($preTestModule) {
-            $preTest = $preTestModule->assessments->where('jenis', 'pre_test')->first();
-            if ($preTest) {
-                $preTestCompleted = $this->progressService->isAssessmentCompleted($student, $preTest);
-            }
-        }
-        
-        // Post-test module
-        $postTestModule = \App\Models\Module::where('urutan', 6)->first();
-        $postTest = null;
-        $postTestCompleted = false;
-        if ($postTestModule) {
-            $postTest = $postTestModule->assessments->where('jenis', 'post_test')->first();
-            if ($postTest) {
-                $postTestCompleted = $this->progressService->isAssessmentCompleted($student, $postTest);
-            }
-        }
-        
         // Determine if they completed all 5 topic LKPDs
         $completedAllLkpd = true;
         foreach ($topiks as $t) {
-            $lkpd = $t->assessments->where('jenis', \App\Models\Assessment::JENIS_LKPD)->first();
-            if ($lkpd && !$this->progressService->isAssessmentCompleted($student, $lkpd)) {
-                $completedAllLkpd = false;
+            $stageAssessments = $t->assessments;
+            foreach ($stageAssessments as $ass) {
+                if (!$this->progressService->isAssessmentCompleted($student, $ass)) {
+                    $completedAllLkpd = false;
+                    break 2;
+                }
             }
         }
         
@@ -58,10 +39,6 @@ class LearningController extends Controller
         return view('student.roadmap', compact(
             'student', 
             'topiks', 
-            'preTest', 
-            'preTestCompleted', 
-            'postTest', 
-            'postTestCompleted', 
             'completedAllLkpd', 
             'progressPercentage'
         ));

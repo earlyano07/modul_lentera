@@ -32,6 +32,31 @@
             @csrf
             @method('PUT')
             
+            <!-- Tipe Soal Selektor -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tipe Soal *</label>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <label class="flex items-center gap-2 p-3.5 border rounded-xl cursor-pointer transition text-xs font-bold"
+                        :class="type === 'single_choice' ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 ring-2 ring-indigo-500/20' : 'border-slate-200 text-slate-600 hover:bg-slate-50'">
+                        <input type="radio" name="type" value="single_choice" x-model="type" class="sr-only">
+                        <span class="material-symbols-outlined text-base text-indigo-600">radio_button_checked</span>
+                        <span>Pilihan Ganda</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-3.5 border rounded-xl cursor-pointer transition text-xs font-bold"
+                        :class="type === 'checklist' ? 'border-emerald-600 bg-emerald-50/70 text-emerald-900 ring-2 ring-emerald-500/20' : 'border-slate-200 text-slate-600 hover:bg-slate-50'">
+                        <input type="radio" name="type" value="checklist" x-model="type" class="sr-only">
+                        <span class="material-symbols-outlined text-base text-emerald-600">check_box</span>
+                        <span>Checklist Komitmen</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-3.5 border rounded-xl cursor-pointer transition text-xs font-bold"
+                        :class="type === 'essay' ? 'border-blue-600 bg-blue-50/70 text-blue-900 ring-2 ring-blue-500/20' : 'border-slate-200 text-slate-600 hover:bg-slate-50'">
+                        <input type="radio" name="type" value="essay" x-model="type" class="sr-only">
+                        <span class="material-symbols-outlined text-base text-blue-600">edit_note</span>
+                        <span>Isian / Uraian</span>
+                    </label>
+                </div>
+            </div>
+
             <!-- Metadata Grid (Nomor Soal & Bobot) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Nomor Soal / Urutan -->
@@ -56,7 +81,7 @@
                         <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                             <span class="material-symbols-outlined text-lg">star</span>
                         </span>
-                        <input type="number" name="score" id="score" value="{{ old('score', $question->score) }}" required 
+                        <input type="number" name="score" id="score" value="{{ old('score', $question->score) }}" required min="1"
                             class="pl-11 w-full text-sm font-semibold px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition @error('score') border-rose-400 bg-rose-50/20 @enderror">
                     </div>
                     @error('score')
@@ -67,8 +92,8 @@
 
             <!-- Pertanyaan Textarea -->
             <div>
-                <label for="question" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Teks Pertanyaan Soal</label>
-                <textarea name="question" id="question" rows="4" required placeholder="Tuliskan pertanyaan pilihan ganda Anda di sini..."
+                <label for="question" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Teks Pertanyaan / Pernyataan *</label>
+                <textarea name="question" id="question" rows="4" required placeholder="Tuliskan teks pertanyaan, komitmen, atau topik isian di sini..."
                     class="w-full text-sm font-semibold px-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition @error('question') border-rose-400 bg-rose-50/20 @enderror">{{ old('question', $question->question) }}</textarea>
                 @error('question')
                     <p class="text-rose-500 text-xs font-semibold mt-1.5">{{ $message }}</p>
@@ -97,7 +122,7 @@
                         class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                         @change="handleFileSelected">
                     <div class="text-center">
-                        <span class="material-symbols-outlined text-slate-455 group-hover:text-indigo-500 text-3xl transition duration-200 mb-2">image</span>
+                        <span class="material-symbols-outlined text-slate-400 group-hover:text-indigo-500 text-3xl transition duration-200 mb-2">image</span>
                         <p class="text-xs font-extrabold text-slate-700" x-text="fileName ? fileName : 'Pilih atau Tarik Gambar Baru Ke Sini'"></p>
                         <p class="text-[10px] text-slate-400 font-semibold mt-1">Format: JPG, PNG. Ukuran maks: 2MB.</p>
                     </div>
@@ -107,25 +132,28 @@
                 @enderror
             </div>
 
-            <hr class="border-slate-100 my-8">
+            <!-- Pilihan Jawaban Section (Hanya untuk Single Choice & Checklist) -->
+            <div x-show="type !== 'essay'" class="space-y-4">
+                <hr class="border-slate-100 my-8">
 
-            <!-- Pilihan Jawaban Section -->
-            <div class="space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-50 pb-3">
                     <div>
-                        <h3 class="text-base font-extrabold text-slate-800">Pilihan Jawaban</h3>
-                        <p class="text-[11px] text-slate-400 font-semibold">Tentukan pilihan jawaban dan centang tombol Kunci Jawaban pada pilihan yang benar.</p>
+                        <h3 class="text-base font-extrabold text-slate-800" x-text="type === 'checklist' ? 'Butir Pernyataan Komitmen' : 'Pilihan Jawaban'"></h3>
+                        <p class="text-[11px] text-slate-400 font-semibold" x-text="type === 'checklist' ? 'Tentukan butir pernyataan dan centang kunci/komitmen yang diharapkan.' : 'Tentukan pilihan jawaban dan tentukan bobot nilai (skor) tiap pilihan.'"></p>
                     </div>
-                    <button type="button" @click="addOption" class="inline-flex items-center gap-1 text-xs font-black text-indigo-600 hover:text-indigo-800 transition uppercase tracking-wider">
-                        <span class="material-symbols-outlined text-sm">add_circle</span>
-                        Tambah Opsi
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="setLikertPreset" class="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl border border-indigo-200 transition cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">format_list_bulleted</span>
+                            Preset Likert (SS=4, S=3, KS=2, TS=1)
+                        </button>
+                        <button type="button" @click="addOption" class="inline-flex items-center gap-1 text-xs font-black text-indigo-600 hover:text-indigo-800 transition uppercase tracking-wider cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">add_circle</span>
+                            Tambah Opsi
+                        </button>
+                    </div>
                 </div>
                 
                 @error('options')
-                    <p class="text-rose-600 text-xs font-semibold mt-1">{{ $message }}</p>
-                @enderror
-                @error('correct_option')
                     <p class="text-rose-600 text-xs font-semibold mt-1">{{ $message }}</p>
                 @enderror
 
@@ -133,7 +161,7 @@
                 <div class="space-y-4">
                     <template x-for="(option, index) in options" :key="index">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 border rounded-2xl transition-all duration-250 bg-slate-50/10" 
-                            :class="option.isCorrect ? 'border-emerald-300 bg-emerald-50/10 ring-4 ring-emerald-500/5' : 'border-slate-200/80 hover:border-slate-300 bg-white'">
+                            :class="option.isCorrect ? 'border-emerald-300 bg-emerald-50/10 ring-4 ring-emerald-500/5' : 'border-slate-200/80 hover:border-slate-350 bg-white'">
                             
                             <!-- Label / Badge -->
                             <div class="flex items-center gap-2 w-full sm:w-auto">
@@ -147,28 +175,58 @@
 
                             <!-- Jawaban Text Input -->
                             <div class="flex-1 w-full">
-                                <input type="text" :name="'options['+index+'][option]'" x-model="option.text" required placeholder="Tuliskan teks pilihan jawaban..."
+                                <input type="text" :name="'options['+index+'][option]'" x-model="option.text" :required="type !== 'essay'" :placeholder="type === 'checklist' ? 'Contoh: Saya akan bersikap jujur dan sopan...' : 'Tuliskan teks pilihan jawaban...'"
                                     class="w-full text-xs sm:text-sm font-semibold px-3 py-2.5 bg-slate-50/20 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
+                            </div>
+
+                            <!-- Bobot Nilai Input -->
+                            <div class="w-full sm:w-28 shrink-0" title="Bobot Nilai Opsi (misal: 4, 3, 2, 1)">
+                                <div class="relative flex items-center">
+                                    <span class="absolute left-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bobot</span>
+                                    <input type="number" :name="'options['+index+'][score]'" x-model="option.score" min="0" placeholder="0"
+                                        class="w-full text-xs sm:text-sm font-bold pl-14 pr-2.5 py-2.5 bg-slate-50/40 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition text-right">
+                                </div>
                             </div>
 
                             <!-- Actions (Kunci Jawaban Toggle & Hapus) -->
                             <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto shrink-0 border-t sm:border-0 pt-3 sm:pt-0">
-                                <!-- Kunci Jawaban Label Button -->
-                                <label class="flex items-center gap-1.5 cursor-pointer px-3.5 py-2 rounded-xl border text-[11px] font-black uppercase tracking-wider transition duration-200" 
-                                    :class="option.isCorrect ? 'bg-emerald-500 border-emerald-500 text-white shadow-xs' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'">
-                                    <input type="radio" name="correct_option" :value="index" x-model="correctIndex" @change="setCorrect(index)" class="sr-only">
-                                    <span class="material-symbols-outlined text-[15px]" x-text="option.isCorrect ? 'check_circle' : 'circle'"></span>
-                                    Kunci Jawaban
-                                </label>
+                                <!-- Single Choice Kunci Radio -->
+                                <template x-if="type === 'single_choice'">
+                                    <label class="flex items-center gap-1.5 cursor-pointer px-3.5 py-2 rounded-xl border text-[11px] font-black uppercase tracking-wider transition duration-200" 
+                                        :class="option.isCorrect ? 'bg-emerald-500 border-emerald-500 text-white shadow-xs' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'">
+                                        <input type="radio" name="correct_option" :value="index" x-model="correctIndex" @change="setCorrect(index)" class="sr-only">
+                                        <span class="material-symbols-outlined text-[15px]" x-text="option.isCorrect ? 'check_circle' : 'circle'"></span>
+                                        Kunci
+                                    </label>
+                                </template>
+
+                                <!-- Checklist Kunci Checkbox -->
+                                <template x-if="type === 'checklist'">
+                                    <label class="flex items-center gap-1.5 cursor-pointer px-3.5 py-2 rounded-xl border text-[11px] font-black uppercase tracking-wider transition duration-200" 
+                                        :class="option.isCorrect ? 'bg-emerald-500 border-emerald-500 text-white shadow-xs' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'">
+                                        <input type="checkbox" name="correct_options[]" :value="index" :checked="option.isCorrect" @change="option.isCorrect = $event.target.checked" class="sr-only">
+                                        <span class="material-symbols-outlined text-[15px]" x-text="option.isCorrect ? 'check_box' : 'check_box_outline_blank'"></span>
+                                        Kunci / Poin
+                                    </label>
+                                </template>
 
                                 <!-- Hapus Button -->
                                 <button type="button" @click="removeOption(index)" x-show="options.length > 2" 
-                                    class="inline-flex items-center justify-center h-8.5 w-8.5 text-rose-500 hover:text-white border border-rose-100 hover:bg-rose-500 rounded-xl transition duration-200 shrink-0">
+                                    class="inline-flex items-center justify-center h-8.5 w-8.5 text-rose-500 hover:text-white border border-rose-100 hover:bg-rose-500 rounded-xl transition duration-200 shrink-0 cursor-pointer">
                                     <span class="material-symbols-outlined text-base">delete</span>
                                 </button>
                             </div>
                         </div>
                     </template>
+                </div>
+            </div>
+
+            <!-- Essay Information Notice -->
+            <div x-show="type === 'essay'" class="p-5 rounded-2xl bg-blue-50/60 border border-blue-200/70 text-xs text-blue-900 flex items-start gap-3 my-6">
+                <span class="material-symbols-outlined text-blue-600 text-xl shrink-0">info</span>
+                <div>
+                    <p class="font-extrabold text-sm">Informasi Tipe Soal Isian / Uraian</p>
+                    <p class="text-xs text-blue-700/90 font-medium mt-1">Soal isian tidak memerlukan opsi pilihan. Siswa akan langsung mengetikkan respon jawaban refleksi/uraian pada kotak teks saat ujian.</p>
                 </div>
             </div>
 
@@ -191,7 +249,8 @@
             return [
                 'id' => $opt->id,
                 'label' => $opt->label,
-                'text' => $opt->option, // Correct map using 'option' column!
+                'text' => $opt->option,
+                'score' => $opt->score ?? 0,
                 'isCorrect' => (bool)$opt->is_correct
             ];
         })->toArray();
@@ -201,6 +260,7 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('questionForm', () => ({
+                type: '{{ old("type", $question->type ?: "single_choice") }}',
                 correctIndex: '{{ $correctIndex !== false ? $correctIndex : 0 }}',
                 fileName: '',
                 options: @json($existingOptions),
@@ -208,12 +268,22 @@
                 init() {
                     if (this.options.length === 0) {
                         this.options = [
-                            { id: null, label: 'A', text: '', isCorrect: true },
-                            { id: null, label: 'B', text: '', isCorrect: false },
-                            { id: null, label: 'C', text: '', isCorrect: false },
-                            { id: null, label: 'D', text: '', isCorrect: false }
+                            { id: null, label: 'A', text: '', score: 0, isCorrect: true },
+                            { id: null, label: 'B', text: '', score: 0, isCorrect: false },
+                            { id: null, label: 'C', text: '', score: 0, isCorrect: false },
+                            { id: null, label: 'D', text: '', score: 0, isCorrect: false }
                         ];
                     }
+                },
+                setLikertPreset() {
+                    this.type = 'single_choice';
+                    this.options = [
+                        { id: null, label: 'SS', text: 'Sangat Sesuai', score: 4, isCorrect: false },
+                        { id: null, label: 'S', text: 'Sesuai', score: 3, isCorrect: false },
+                        { id: null, label: 'KS', text: 'Kurang Sesuai', score: 2, isCorrect: false },
+                        { id: null, label: 'TS', text: 'Tidak Sesuai', score: 1, isCorrect: false }
+                    ];
+                    this.correctIndex = '0';
                 },
                 handleFileSelected(e) {
                     const file = e.target.files[0];
@@ -226,17 +296,15 @@
                 addOption() {
                     const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
                     const nextLabel = this.options.length < labels.length ? labels[this.options.length] : String.fromCharCode(65 + this.options.length);
-                    this.options.push({ id: null, label: nextLabel, text: '', isCorrect: false });
+                    this.options.push({ id: null, label: nextLabel, text: '', score: 0, isCorrect: this.type === 'checklist' });
                 },
                 removeOption(index) {
                     this.options.splice(index, 1);
-                    // Re-calculate alphabetical labels
                     this.options.forEach((opt, i) => {
                         const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
                         opt.label = i < labels.length ? labels[i] : String.fromCharCode(65 + i);
                     });
                     
-                    // Reset correct answer if deleted was correct
                     if (this.correctIndex == index) {
                         this.correctIndex = '0';
                         this.setCorrect(0);

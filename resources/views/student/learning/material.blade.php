@@ -135,6 +135,18 @@
                             </ul>
                         </div>
                     </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-5 pt-3 border-t border-emerald-100/60 flex items-center justify-center gap-2">
+                        <a href="{{ route('kartu-situasi.print-single', $material) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition">
+                            <span class="material-symbols-outlined text-[15px]">print</span>
+                            Cetak / Simpan PDF
+                        </a>
+                        <a href="{{ route('kartu-situasi.docx-single', $material) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition">
+                            <span class="material-symbols-outlined text-[15px]">download</span>
+                            Unduh Word (.docx)
+                        </a>
+                    </div>
                 </div>
             @else
                 {!! $material->isi ?? '<p>Konten akan tampil di sini.</p>' !!}

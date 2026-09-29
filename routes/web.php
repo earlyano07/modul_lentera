@@ -20,6 +20,11 @@ use App\Http\Controllers\Counselor\SettingsController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Student\LearningController;
 use App\Http\Controllers\Student\AssessmentController as StudentAssessmentController;
+use App\Http\Controllers\Student\ProfileController as StudentProfileController;
+use App\Http\Controllers\Admin\CertificateTemplateController;
+use App\Http\Controllers\Counselor\CertificateController as CounselorCertificateController;
+use App\Http\Controllers\Student\CertificateController as StudentCertificateController;
+use App\Http\Controllers\KartuSituasiController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -65,6 +70,15 @@ Route::prefix('admin')
 
         // Questions (nested under assessments)
         Route::resource('assessments.questions', QuestionController::class)->shallow();
+
+        // Certificate Template (Word .docx & Metadata)
+        Route::get('certificate-template', [CertificateTemplateController::class, 'index'])->name('certificate-template.index');
+        Route::put('certificate-template/metadata', [CertificateTemplateController::class, 'updateMetadata'])->name('certificate-template.update-metadata');
+        Route::post('certificate-template/upload-docx', [CertificateTemplateController::class, 'uploadDocx'])->name('certificate-template.upload-docx');
+        Route::get('certificate-template/download-template', [CertificateTemplateController::class, 'downloadDocxTemplate'])->name('certificate-template.download-docx-template');
+        Route::get('certificate-template/download-default-template', [CertificateTemplateController::class, 'downloadDefaultDocxTemplate'])->name('certificate-template.download-default-docx-template');
+        Route::get('certificate-template/preview-docx', [CertificateTemplateController::class, 'previewDocx'])->name('certificate-template.preview-docx');
+        Route::post('certificate-template/reset', [CertificateTemplateController::class, 'reset'])->name('certificate-template.reset');
     });
 
 // ===== Counselor Routes =====
@@ -76,6 +90,7 @@ Route::prefix('counselor')
 
         // Monitoring
         Route::get('/schools', [MonitoringController::class, 'schools'])->name('monitoring.schools');
+        Route::post('/schools/assign', [MonitoringController::class, 'assignSchools'])->name('monitoring.schools.assign');
         Route::get('/schools/{school}/kelas', [MonitoringController::class, 'kelas'])->name('monitoring.kelas');
         Route::get('/kelas/{kelas}/students', [MonitoringController::class, 'students'])->name('monitoring.students');
         Route::get('/students/{student}/progress', [MonitoringController::class, 'studentDetail'])->name('monitoring.student.detail');
@@ -95,6 +110,10 @@ Route::prefix('counselor')
         Route::post('/evaluasi', [EvaluasiController::class, 'store'])->name('evaluasi.store');
         Route::get('/profil-empati', [ProfilEmpatiController::class, 'index'])->name('profil-empati');
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+
+        // Certificate
+        Route::get('/students/{student}/certificate', [CounselorCertificateController::class, 'show'])->name('monitoring.student.certificate');
+        Route::get('/students/{student}/certificate/docx', [CounselorCertificateController::class, 'downloadDocx'])->name('monitoring.student.certificate.docx');
     });
 
 // ===== Student Routes =====
@@ -112,6 +131,15 @@ Route::prefix('student')
         Route::post('/assessment/{assessment}/start', [StudentAssessmentController::class, 'start'])->name('assessment.start');
         Route::post('/assessment/{assessment}/submit', [StudentAssessmentController::class, 'submit'])->name('assessment.submit');
         Route::get('/assessment/{assessment}/result', [StudentAssessmentController::class, 'result'])->name('assessment.result');
+
+        // Certificate
+        Route::get('/certificate', [StudentCertificateController::class, 'show'])->name('certificate');
+        Route::get('/certificate/docx', [StudentCertificateController::class, 'downloadDocx'])->name('certificate.docx');
+
+        // Profile Management
+        Route::get('/profile', [StudentProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile/username', [StudentProfileController::class, 'updateUsername'])->name('profile.update-username');
+        Route::put('/profile/password', [StudentProfileController::class, 'updatePassword'])->name('profile.update-password');
     });
 
 // ===== Profile Routes (Breeze) =====
@@ -119,6 +147,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Kartu Situasi Print & Download
+    Route::get('/kartu-situasi/module/{module}/print', [KartuSituasiController::class, 'printModule'])->name('kartu-situasi.print');
+    Route::get('/kartu-situasi/module/{module}/docx', [KartuSituasiController::class, 'downloadDocxModule'])->name('kartu-situasi.docx');
+    Route::get('/kartu-situasi/{material}/print', [KartuSituasiController::class, 'printSingle'])->name('kartu-situasi.print-single');
+    Route::get('/kartu-situasi/{material}/docx', [KartuSituasiController::class, 'downloadDocxSingle'])->name('kartu-situasi.docx-single');
 });
 
 // ===== Dashboard Redirect =====

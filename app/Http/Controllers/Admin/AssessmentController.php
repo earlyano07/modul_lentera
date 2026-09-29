@@ -19,7 +19,9 @@ class AssessmentController extends Controller
     {
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
-            'jenis' => 'required|in:pre_test,post_test,lkpd,penilaian_diri,lembar_komitmen,stage_assessment',
+            'deskripsi' => 'nullable|string',
+            'catatan' => 'nullable|string',
+            'jenis' => 'required|in:penilaian_diri,refleksi_diri,lembar_komitmen,lkpd',
             'max_skor' => 'nullable|integer|min:0',
             'urutan' => 'required|integer|min:1',
         ]);
@@ -45,7 +47,9 @@ class AssessmentController extends Controller
     {
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
-            'jenis' => 'required|in:pre_test,post_test,lkpd,penilaian_diri,lembar_komitmen,stage_assessment',
+            'deskripsi' => 'nullable|string',
+            'catatan' => 'nullable|string',
+            'jenis' => 'required|in:penilaian_diri,refleksi_diri,lembar_komitmen,lkpd',
             'max_skor' => 'nullable|integer|min:0',
             'urutan' => 'required|integer|min:1',
         ]);

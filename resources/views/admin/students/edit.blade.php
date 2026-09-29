@@ -34,10 +34,19 @@
                     @enderror
                 </div>
 
+                <!-- Username -->
+                <div>
+                    <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+                    <input type="text" name="username" id="username" value="{{ old('username', $student->user->username ?? '') }}" class="shadow appearance-none @error('username') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Username login siswa">
+                    @error('username')
+                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <!-- Email -->
                 <div>
-                    <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email *</label>
-                    <input type="email" name="email" id="email" value="{{ old('email', $student->user->email ?? '') }}" required class="shadow appearance-none @error('email') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email (Opsional)</label>
+                    <input type="email" name="email" id="email" value="{{ old('email', $student->user->email ?? '') }}" class="shadow appearance-none @error('email') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="siswa@sekolah.sch.id">
                     @error('email')
                         <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                     @enderror

@@ -36,12 +36,16 @@
              showAssessmentEditModal: false,
              assessmentCreateForm: {
                  judul: '',
+                 deskripsi: '',
+                 catatan: '',
                  jenis: 'lkpd',
                  urutan: {{ ($module->assessments->max('urutan') ?? 0) + 1 }}
              },
              assessmentEditForm: {
                  id: '',
                  judul: '',
+                 deskripsi: '',
+                 catatan: '',
                  jenis: 'lkpd',
                  urutan: 1,
                  update_url: ''
@@ -49,11 +53,21 @@
              openAssessmentCreateModal(defaultJenis = 'lkpd') {
                  this.assessmentCreateForm.jenis = defaultJenis;
                  this.assessmentCreateForm.judul = '';
+                 this.assessmentCreateForm.deskripsi = '';
+                 this.assessmentCreateForm.catatan = '';
                  this.showAssessmentCreateModal = true;
                  this.$nextTick(() => this.$refs.createAssessmentJudulInput?.focus());
              },
              openAssessmentEditModal(data) {
-                 this.assessmentEditForm = { ...data };
+                 this.assessmentEditForm = {
+                     id: data.id || '',
+                     judul: data.judul || '',
+                     deskripsi: data.deskripsi || '',
+                     catatan: data.catatan || '',
+                     jenis: data.jenis || 'lkpd',
+                     urutan: data.urutan || 1,
+                     update_url: data.update_url || ''
+                 };
                  this.showAssessmentEditModal = true;
                  this.$nextTick(() => this.$refs.editAssessmentJudulInput?.focus());
              },
@@ -259,20 +273,32 @@
                             @php
                                 $kartuList = $module->materials->where('jenis', \App\Models\Material::JENIS_KARTU_SITUASI);
                             @endphp
-                            <div class="flex justify-between items-start border-b border-gray-100 pb-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 pb-4">
                                 <div>
                                     <span class="px-2.5 py-1 bg-emerald-500 text-white text-xs font-bold rounded-lg uppercase tracking-wider">Tahap 2</span>
                                     <h3 class="text-xl font-black text-slate-800 mt-2">Role Playing (Kartu Situasi)</h3>
                                     <p class="text-sm text-gray-500 mt-0.5 font-semibold">Siswa melatih respon empati secara berkelompok dengan memperagakan skenario kasus.</p>
                                 </div>
-                                <button type="button" @click="openKartuCreateModal()" class="inline-flex items-center gap-1.5 px-4 py-2 border border-transparent rounded-xl text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition uppercase tracking-wide cursor-pointer">
-                                    <span class="material-symbols-outlined text-sm">add_circle</span>
-                                    + Tambah Kartu Situasi
-                                </button>
+                                <div class="flex items-center gap-2 shrink-0 flex-wrap">
+                                    @if($kartuList->count() > 0)
+                                        <a href="{{ route('kartu-situasi.print', $module) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl text-xs font-black shadow-xs transition uppercase tracking-wide cursor-pointer">
+                                            <span class="material-symbols-outlined text-sm">print</span>
+                                            Cetak / PDF
+                                        </a>
+                                        <a href="{{ route('kartu-situasi.docx', $module) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl text-xs font-black shadow-xs transition uppercase tracking-wide cursor-pointer">
+                                            <span class="material-symbols-outlined text-sm">download</span>
+                                            Word (.docx)
+                                        </a>
+                                    @endif
+                                    <button type="button" @click="openKartuCreateModal()" class="inline-flex items-center gap-1.5 px-4 py-2 border border-transparent rounded-xl text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition uppercase tracking-wide cursor-pointer">
+                                        <span class="material-symbols-outlined text-sm">add_circle</span>
+                                        + Tambah Kartu Situasi
+                                    </button>
+                                </div>
                             </div>
 
                             @if($kartuList->count() > 0)
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 justify-center w-full">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center w-full">
                                     @foreach($kartuList as $kartu)
                                         <div class="w-full bg-white border-2 border-emerald-600/30 rounded-[2rem] p-6 shadow-md relative overflow-hidden flex flex-col justify-between">
                                             <div>
@@ -368,6 +394,18 @@
                                                         @endforeach
                                                     </ul>
                                                 </div>
+                                            </div>
+
+                                            <!-- Card Action Footer -->
+                                            <div class="mt-4 pt-3 border-t border-emerald-100/60 flex items-center justify-end gap-2">
+                                                <a href="{{ route('kartu-situasi.print-single', $kartu) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg transition">
+                                                    <span class="material-symbols-outlined text-[14px]">print</span>
+                                                    Cetak Kartu Ini
+                                                </a>
+                                                <a href="{{ route('kartu-situasi.docx-single', $kartu) }}" class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition">
+                                                    <span class="material-symbols-outlined text-[14px]">download</span>
+                                                    Word
+                                                </a>
                                             </div>
                                         </div>
                                     @endforeach
@@ -484,12 +522,10 @@
                                             <div>
                                                 <h4 class="text-sm font-semibold text-gray-900">{{ $assessment->judul }}</h4>
                                                 <div class="mt-1 flex items-center gap-2">
-                                                    @if($assessment->jenis == 'pre_test')
-                                                        <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded">Pre-Test</span>
-                                                    @elseif($assessment->jenis == 'post_test')
-                                                        <span class="px-2 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold rounded">Post-Test</span>
-                                                    @elseif($assessment->jenis == 'penilaian_diri')
+                                                    @if($assessment->jenis == 'penilaian_diri')
                                                         <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded">Penilaian Diri</span>
+                                                    @elseif($assessment->jenis == 'refleksi_diri')
+                                                        <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-bold rounded">Refleksi Diri</span>
                                                     @elseif($assessment->jenis == 'lembar_komitmen')
                                                         <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded">Lembar Komitmen</span>
                                                     @else
@@ -508,6 +544,8 @@
                                                 @click="openAssessmentEditModal({{ json_encode([
                                                     'id' => $assessment->id,
                                                     'judul' => $assessment->judul,
+                                                    'deskripsi' => $assessment->deskripsi,
+                                                    'catatan' => $assessment->catatan,
                                                     'jenis' => $assessment->jenis,
                                                     'urutan' => $assessment->urutan,
                                                     'update_url' => route('admin.assessments.update', $assessment)
@@ -696,7 +734,7 @@
                                     <input type="url" name="video" id="modal_video_url" x-model="videoUrl" placeholder="https://www.youtube.com/watch?v=..."
                                         class="pl-9 w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition">
                                 </div>
-                                <p class="text-[10px] text-slate-400 mt-1 font-medium">Mendukung link format youtube.com maupun youtu.be</p>
+                                <p class="text-[10px] text-slate-400 mt-1 font-medium">Mendukung link format youtube.com, youtu.be, maupun YouTube Shorts</p>
                             </div>
 
                             <!-- Input 2: Upload File Video -->
@@ -1031,11 +1069,9 @@
                                 <label for="create_assessment_jenis" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Jenis Asesmen *</label>
                                 <select name="jenis" id="create_assessment_jenis" x-model="assessmentCreateForm.jenis" required
                                     class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition">
-                                    <option value="lkpd">Lembar Kerja Peserta Didik (LKPD)</option>
-                                    <option value="penilaian_diri">Penilaian Diri (Self Assessment)</option>
-                                    <option value="lembar_komitmen">Lembar Komitmen (Commitment Sheet)</option>
-                                    <option value="pre_test">Pre Test</option>
-                                    <option value="post_test">Post Test</option>
+                                    <option value="penilaian_diri">Penilaian Diri</option>
+                                    <option value="refleksi_diri">Refleksi Diri</option>
+                                    <option value="lembar_komitmen">Lembar Komitmen</option>
                                 </select>
                             </div>
 
@@ -1043,6 +1079,20 @@
                             <div>
                                 <label for="create_assessment_urutan" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nomor Urut *</label>
                                 <input type="number" name="urutan" id="create_assessment_urutan" x-model="assessmentCreateForm.urutan" min="1" required
+                                    class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition">
+                            </div>
+
+                            <!-- Field 4: Bahan Bacaan / Situasi Kasus -->
+                            <div>
+                                <label for="create_assessment_deskripsi" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Bahan Bacaan / Situasi Kasus (Opsional)</label>
+                                <textarea name="deskripsi" id="create_assessment_deskripsi" x-model="assessmentCreateForm.deskripsi" rows="3" placeholder="Misal: Bacalah situasi berikut. Raka sering dipanggil..."
+                                    class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition"></textarea>
+                            </div>
+
+                            <!-- Field 5: Catatan Penilaian / Footnote -->
+                            <div>
+                                <label for="create_assessment_catatan" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Catatan Penilaian / Footnote (Opsional)</label>
+                                <input type="text" name="catatan" id="create_assessment_catatan" x-model="assessmentCreateForm.catatan" placeholder="Misal: Catatan: Butir nomor 4 adalah pernyataan negatif sehingga skornya dibalik."
                                     class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition">
                             </div>
 
@@ -1089,7 +1139,7 @@
                      x-transition:leave="transition ease-in duration-250"
                      x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                      x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                     class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all w-full max-w-lg p-6 md:p-8 flex flex-col max-h-[90vh] z-10 border border-slate-100">
+                     class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all w-full max-w-xl p-6 md:p-8 flex flex-col max-h-[90vh] z-10 border border-slate-100">
                     
                     <!-- Close Button -->
                     <button type="button" @click="showAssessmentEditModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition p-1 hover:bg-slate-100 rounded-lg cursor-pointer">
@@ -1102,7 +1152,7 @@
                             <span class="material-symbols-outlined text-purple-600 text-2xl">edit_document</span>
                             Edit Paket Asesmen
                         </h2>
-                        <p class="text-xs text-slate-400 font-semibold mt-1">Perbarui judul, kategori, atau nomor urut asesmen</p>
+                        <p class="text-xs text-slate-400 font-semibold mt-1">Perbarui judul, kategori, nomor urut, serta bahan bacaan situasi dan catatan</p>
                     </div>
 
                     <!-- Form -->
@@ -1124,11 +1174,9 @@
                                 <label for="edit_assessment_jenis" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Jenis Asesmen *</label>
                                 <select name="jenis" id="edit_assessment_jenis" x-model="assessmentEditForm.jenis" required
                                     class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition">
-                                    <option value="lkpd">Lembar Kerja Peserta Didik (LKPD)</option>
-                                    <option value="penilaian_diri">Penilaian Diri (Self Assessment)</option>
-                                    <option value="lembar_komitmen">Lembar Komitmen (Commitment Sheet)</option>
-                                    <option value="pre_test">Pre Test</option>
-                                    <option value="post_test">Post Test</option>
+                                    <option value="penilaian_diri">Penilaian Diri</option>
+                                    <option value="refleksi_diri">Refleksi Diri</option>
+                                    <option value="lembar_komitmen">Lembar Komitmen</option>
                                 </select>
                             </div>
 
@@ -1136,6 +1184,20 @@
                             <div>
                                 <label for="edit_assessment_urutan" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nomor Urut *</label>
                                 <input type="number" name="urutan" id="edit_assessment_urutan" x-model="assessmentEditForm.urutan" min="1" required
+                                    class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition">
+                            </div>
+
+                            <!-- Field 4: Bahan Bacaan / Situasi Kasus -->
+                            <div>
+                                <label for="edit_assessment_deskripsi" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Bahan Bacaan / Situasi Kasus (Opsional)</label>
+                                <textarea name="deskripsi" id="edit_assessment_deskripsi" x-model="assessmentEditForm.deskripsi" rows="3" placeholder="Misal: Bacalah situasi berikut. Raka sering dipanggil..."
+                                    class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition"></textarea>
+                            </div>
+
+                            <!-- Field 5: Catatan Penilaian / Footnote -->
+                            <div>
+                                <label for="edit_assessment_catatan" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Catatan Penilaian / Footnote (Opsional)</label>
+                                <input type="text" name="catatan" id="edit_assessment_catatan" x-model="assessmentEditForm.catatan" placeholder="Misal: Catatan: Butir nomor 4 adalah pernyataan negatif sehingga skornya dibalik."
                                     class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition">
                             </div>
 

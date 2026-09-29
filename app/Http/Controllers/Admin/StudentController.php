@@ -34,7 +34,8 @@ class StudentController extends Controller
     {
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'username' => 'nullable|string|max:255|unique:users,username',
+            'email' => 'nullable|email|unique:users,email',
             'password' => 'required|string|min:8',
             'kelas_id' => 'required|exists:kelas,id',
             'nis' => 'required|string|max:50',
@@ -42,10 +43,28 @@ class StudentController extends Controller
             'tanggal_lahir' => 'required|date',
         ]);
         DB::transaction(function () use ($validated) {
+            $username = $validated['username'] ?? null;
+            if (empty($username)) {
+                $prefix = strtolower(substr(preg_replace('/[^a-zA-Z]/', '', $validated['nama']), 0, 3));
+                if (strlen($prefix) < 3) {
+                    $prefix = str_pad($prefix, 3, 'x');
+                }
+                $cleanNis = preg_replace('/[^a-zA-Z0-9]/', '', $validated['nis']);
+                $tglDaftar = now()->format('d');
+                $baseUsername = $prefix . $cleanNis . $tglDaftar;
+                $username = $baseUsername;
+                $counter = 1;
+                while (User::where('username', $username)->exists()) {
+                    $username = $baseUsername . $counter;
+                    $counter++;
+                }
+            }
+
             $user = User::create([
                 'role_id' => Role::SISWA,
                 'nama' => $validated['nama'],
-                'email' => $validated['email'],
+                'username' => $username,
+                'email' => $validated['email'] ?? null,
                 'password' => Hash::make($validated['password']),
             ]);
             Student::create([
@@ -70,7 +89,8 @@ class StudentController extends Controller
     {
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $student->user_id,
+            'username' => 'nullable|string|max:255|unique:users,username,' . $student->user_id,
+            'email' => 'nullable|email|unique:users,email,' . $student->user_id,
             'password' => 'nullable|string|min:8',
             'kelas_id' => 'required|exists:kelas,id',
             'nis' => 'required|string|max:50',
@@ -78,7 +98,11 @@ class StudentController extends Controller
             'tanggal_lahir' => 'required|date',
         ]);
         DB::transaction(function () use ($validated, $student) {
-            $userData = ['nama' => $validated['nama'], 'email' => $validated['email']];
+            $userData = [
+                'nama' => $validated['nama'],
+                'username' => !empty($validated['username']) ? $validated['username'] : null,
+                'email' => !empty($validated['email']) ? $validated['email'] : null,
+            ];
             if (!empty($validated['password'])) {
                 $userData['password'] = Hash::make($validated['password']);
             }

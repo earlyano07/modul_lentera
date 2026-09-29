@@ -7,7 +7,7 @@
             <li class="inline-flex items-center">
                 <a href="{{ route('student.roadmap') }}" class="hover:text-indigo-600 font-semibold transition-colors flex items-center gap-1">
                     <span class="material-symbols-outlined text-[16px]">assignment</span>
-                    Daftar Topik LKPD
+                    Daftar Topik Asesmen
                 </a>
             </li>
             <li>
@@ -36,7 +36,7 @@
 
     <!-- Tahap 4: Transfer of Training (Pilihan Asesmen & LKPD) -->
     @php
-        $stageAssessments = $module->assessments->whereNotIn('jenis', ['pre_test', 'post_test'])->sortBy('urutan');
+        $stageAssessments = $module->assessments->sortBy('urutan');
     @endphp
     <div class="space-y-6">
         <div class="flex items-center justify-between">
@@ -59,13 +59,20 @@
                     $isCompleted = $assessmentProgress?->status === 'selesai';
                     $hasQuestions = $assessment->questions->count() > 0;
                     
-                    // Theme color per index
-                    $themeColors = [
-                        1 => ['bg' => 'from-blue-50 to-indigo-50/40', 'border' => 'border-blue-200/80', 'badge' => 'bg-blue-600', 'btn' => 'bg-blue-600 hover:bg-blue-700', 'icon' => 'assignment', 'type' => 'LKPD ONLINE'],
-                        2 => ['bg' => 'from-emerald-50 to-teal-50/40', 'border' => 'border-emerald-200/80', 'badge' => 'bg-emerald-600', 'btn' => 'bg-emerald-600 hover:bg-emerald-700', 'icon' => 'favorite', 'type' => 'PENILAIAN DIRI'],
-                        3 => ['bg' => 'from-amber-50 to-orange-50/40', 'border' => 'border-amber-200/80', 'badge' => 'bg-amber-600', 'btn' => 'bg-amber-600 hover:bg-amber-700', 'icon' => 'handshake', 'type' => 'LEMBAR KOMITMEN'],
+                    $jenisMap = [
+                        'penilaian_diri' => ['bg' => 'from-emerald-50 to-teal-50/40', 'border' => 'border-emerald-200/80', 'badge' => 'bg-emerald-600', 'btn' => 'bg-emerald-600 hover:bg-emerald-700', 'icon' => 'favorite', 'type' => 'PENILAIAN DIRI'],
+                        'refleksi_diri' => ['bg' => 'from-blue-50 to-indigo-50/40', 'border' => 'border-blue-200/80', 'badge' => 'bg-blue-600', 'btn' => 'bg-blue-600 hover:bg-blue-700', 'icon' => 'auto_stories', 'type' => 'REFLEKSI DIRI'],
+                        'lkpd' => ['bg' => 'from-blue-50 to-indigo-50/40', 'border' => 'border-blue-200/80', 'badge' => 'bg-blue-600', 'btn' => 'bg-blue-600 hover:bg-blue-700', 'icon' => 'auto_stories', 'type' => 'REFLEKSI DIRI'],
+                        'lembar_komitmen' => ['bg' => 'from-amber-50 to-orange-50/40', 'border' => 'border-amber-200/80', 'badge' => 'bg-amber-600', 'btn' => 'bg-amber-600 hover:bg-amber-700', 'icon' => 'handshake', 'type' => 'LEMBAR KOMITMEN'],
                     ];
-                    $color = $themeColors[$loop->iteration] ?? $themeColors[1];
+                    $color = $jenisMap[$assessment->jenis] ?? [
+                        'bg' => 'from-slate-50 to-indigo-50/40', 
+                        'border' => 'border-slate-200/80', 
+                        'badge' => 'bg-indigo-600', 
+                        'btn' => 'bg-indigo-600 hover:bg-indigo-700', 
+                        'icon' => 'quiz', 
+                        'type' => strtoupper(\App\Models\Assessment::JENIS_OPTIONS[$assessment->jenis] ?? $assessment->jenis)
+                    ];
                 @endphp
                 <div class="bg-gradient-to-b {{ $color['bg'] }} rounded-3xl border {{ $color['border'] }} p-6 shadow-xs flex flex-col justify-between hover:shadow-md transition-all relative overflow-hidden">
                     <div>

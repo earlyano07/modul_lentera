@@ -1,10 +1,10 @@
 <x-app-layout>
-    <x-slot name="title">LKPD Online - Daftar Topik</x-slot>
+    <x-slot name="title">Daftar Topik Asesmen</x-slot>
 
     <!-- Header Section -->
     <div class="mb-8">
-        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Lembar Kerja Peserta Didik (LKPD)</h1>
-        <p class="mt-2 text-sm text-slate-600 font-medium">Selesaikan Lembar Kerja Peserta Didik (LKPD) online untuk setiap topik bimbingan empati secara berurutan.</p>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Asesmen Bimbingan Empati</h1>
+        <p class="mt-2 text-sm text-slate-600 font-medium">Selesaikan instrumen asesmen bimbingan empati untuk setiap topik secara berurutan.</p>
     </div>
 
     <!-- Progress Tracker -->
@@ -18,37 +18,30 @@
         </div>
     </div>
 
-    <!-- Pre-Test Alert Banner -->
-    @if(!$preTestCompleted && $preTest)
-        <div class="mb-8 p-6 bg-indigo-50 border border-indigo-200/50 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
-            <div class="flex items-start gap-3">
-                <span class="material-symbols-outlined text-[36px] text-indigo-600 mt-1">assignment_turned_in</span>
+    @if(($progressPercentage ?? 0) >= 100)
+        <!-- Certificate Ready Banner -->
+        <div class="mb-8 p-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-3xl text-white">workspace_premium</span>
+                </div>
                 <div>
-                    <h4 class="font-bold text-indigo-900 text-base">Asesmen Awal (Pre-Test) Belum Selesai</h4>
-                    <p class="text-xs text-indigo-700 font-semibold mt-1 max-w-2xl leading-relaxed">Selamat datang di LENTERA! Silakan kerjakan Asesmen Awal terlebih dahulu sebelum Anda dapat mengakses pengerjaan Lembar Kerja Peserta Didik (LKPD) pada 5 topik bimbingan empati.</p>
+                    <h3 class="text-xl font-bold">Selamat! Anda Telah Menyelesaikan Layanan Model LENTERA</h3>
+                    <p class="text-emerald-100 text-xs sm:text-sm mt-1">Seluruh topik dan instrumen asesmen telah tuntas. Sertifikat resmi dan lembar komitmen Anda sudah siap dicetak atau disimpan.</p>
                 </div>
             </div>
-            <a href="{{ route('student.assessment.show', $preTest->id) }}" target="_blank" class="inline-flex items-center justify-center px-5 py-3 bg-[#1a73e8] text-white font-bold rounded-xl hover:bg-[#004493] text-xs sm:text-sm shadow-md hover:shadow-lg transition-all gap-1.5 shrink-0">
-                Mulai Pre-Test
-                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-            </a>
-        </div>
-    @endif
-
-    <!-- Post-Test Alert Banner -->
-    @if($completedAllLkpd && $postTest && !$postTestCompleted)
-        <div class="mb-8 p-6 bg-emerald-50 border border-emerald-200/50 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm animate-pulse">
-            <div class="flex items-start gap-3">
-                <span class="material-symbols-outlined text-[36px] text-emerald-600 mt-1 animate-bounce">emoji_events</span>
-                <div>
-                    <h4 class="font-bold text-emerald-900 text-base">Selamat! Seluruh LKPD Selesai Dikerjakan</h4>
-                    <p class="text-xs text-emerald-700 font-semibold mt-1 max-w-2xl leading-relaxed">Anda telah menyelesaikan LKPD untuk 5 topik intervensi empati. Sekarang, silakan kerjakan Asesmen Akhir (Post-Test) untuk melengkapi seluruh proses bimbingan Anda.</p>
-                </div>
+            <div class="shrink-0 flex items-center gap-2">
+                <a href="{{ route('student.certificate') }}" target="_blank"
+                    class="px-5 py-3 bg-white text-emerald-800 hover:bg-emerald-50 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">print</span>
+                    Cetak Web
+                </a>
+                <a href="{{ route('student.certificate.docx') }}"
+                    class="px-5 py-3 bg-emerald-800 hover:bg-emerald-900 border border-emerald-400/40 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">description</span>
+                    Unduh Word (.docx)
+                </a>
             </div>
-            <a href="{{ route('student.assessment.show', $postTest->id) }}" target="_blank" class="inline-flex items-center justify-center px-5 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 text-xs sm:text-sm shadow-md hover:shadow-lg transition-all gap-1.5 shrink-0">
-                Mulai Post-Test
-                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-            </a>
         </div>
     @endif
 
@@ -61,15 +54,14 @@
     <div class="grid grid-cols-1 gap-5">
         @foreach($topiks as $topik)
             @php
-                $stageAssessments = $topik->assessments->whereNotIn('jenis', ['pre_test', 'post_test']);
+                $stageAssessments = $topik->assessments;
                 $totalAssessments = $stageAssessments->count();
                 $completedAssessments = \App\Models\StudentProgress::where('student_id', $student->id)
                     ->whereIn('assessment_id', $stageAssessments->pluck('id'))
                     ->where('status', 'selesai')
                     ->count();
                 
-                // Can access module if pre-test is done AND progressService allows module
-                $canAccess = $preTestCompleted && app(\App\Services\ProgressService::class)->canAccessModule($student, $topik);
+                $canAccess = app(\App\Services\ProgressService::class)->canAccessModule($student, $topik);
                 $isFullyCompleted = $totalAssessments > 0 && $completedAssessments >= $totalAssessments;
             @endphp
 
@@ -112,11 +104,11 @@
                     
                     <!-- 3 Instruments Chips -->
                     <div class="flex items-center gap-2 mt-3 flex-wrap">
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-[10px] font-black border border-blue-100">
-                            <span class="material-symbols-outlined text-[12px]">assignment</span> LKPD
-                        </span>
                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-black border border-emerald-100">
                             <span class="material-symbols-outlined text-[12px]">favorite</span> Penilaian Diri
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-[10px] font-black border border-blue-100">
+                            <span class="material-symbols-outlined text-[12px]">auto_stories</span> Refleksi Diri
                         </span>
                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-[10px] font-black border border-amber-100">
                             <span class="material-symbols-outlined text-[12px]">handshake</span> Lembar Komitmen

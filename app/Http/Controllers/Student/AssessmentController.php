@@ -41,7 +41,6 @@ class AssessmentController extends Controller
         $student = auth()->user()->student;
         $validated = $request->validate([
             'answers' => 'required|array',
-            'answers.*' => 'required|integer|exists:question_options,id',
         ]);
         $this->progressService->completeAssessment($student, $assessment, $validated['answers']);
         return redirect()->route('student.assessment.result', $assessment)->with('success', 'Assessment berhasil diselesaikan!');
@@ -55,7 +54,7 @@ class AssessmentController extends Controller
         if (!$progress || $progress->status !== 'selesai') {
             return redirect()->route('student.assessment.show', $assessment);
         }
-        $assessment->load('module');
+        $assessment->load(['module', 'questions.options']);
         return view('student.assessment.result', compact('assessment', 'progress'));
     }
 }

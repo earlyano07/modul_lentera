@@ -43,7 +43,7 @@ class Material extends Model
         if (!$this->isYoutubeVideo()) return null;
 
         $videoId = null;
-        if (preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/', $this->video, $matches)) {
+        if (preg_match('/(?:youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/', $this->video, $matches)) {
             $videoId = $matches[1];
         }
 

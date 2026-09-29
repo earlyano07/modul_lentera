@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['question_id', 'label', 'option', 'is_correct'])]
+#[Fillable(['question_id', 'label', 'option', 'is_correct', 'score'])]
 class QuestionOption extends Model
 {
     protected function casts(): array
     {
         return [
             'is_correct' => 'boolean',
+            'score' => 'integer',
         ];
     }
 

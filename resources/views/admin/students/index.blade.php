@@ -56,7 +56,18 @@
                                         </div>
                                         <div>
                                             <div class="text-sm font-extrabold text-slate-800">{{ $student->user->nama ?? '-' }}</div>
-                                            <div class="text-xs text-slate-500 font-medium">{{ $student->user->email ?? '-' }}</div>
+                                            <div class="flex items-center gap-1.5 text-xs text-slate-500 font-medium mt-0.5">
+                                                @if(!empty($student->user->username))
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                                        @ {{ $student->user->username }}
+                                                    </span>
+                                                @endif
+                                                @if(!empty($student->user->email))
+                                                    <span>{{ $student->user->email }}</span>
+                                                @elseif(empty($student->user->username))
+                                                    <span>-</span>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -82,6 +93,7 @@
                                             @click="openEditModal({{ json_encode([
                                                 'id' => $student->id,
                                                 'nama' => $student->user->nama ?? '',
+                                                'username' => $student->user->username ?? '',
                                                 'email' => $student->user->email ?? '',
                                                 'kelas_id' => $student->kelas_id,
                                                 'nis' => $student->nis ?? '',
@@ -155,16 +167,23 @@
                         <form action="{{ route('admin.students.store') }}" method="POST" class="space-y-4">
                             @csrf
 
-                            <div>
-                                <label for="create_nama" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Lengkap Siswa *</label>
-                                <input type="text" name="nama" id="create_nama" x-ref="createNamaInput" required placeholder="Contoh: Muhammad Rizky Pratama"
-                                    class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="create_nama" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Lengkap Siswa *</label>
+                                    <input type="text" name="nama" id="create_nama" x-ref="createNamaInput" required placeholder="Contoh: Muhammad Rizky Pratama"
+                                        class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
+                                </div>
+                                <div>
+                                    <label for="create_username" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username (Opsional)</label>
+                                    <input type="text" name="username" id="create_username" placeholder="Otomatis jika dikosongkan"
+                                        class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
+                                </div>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label for="create_email" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email Akun *</label>
-                                    <input type="email" name="email" id="create_email" required placeholder="siswa@sekolah.sch.id"
+                                    <label for="create_email" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email Akun (Opsional)</label>
+                                    <input type="email" name="email" id="create_email" placeholder="siswa@sekolah.sch.id"
                                         class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
                                 </div>
                                 <div>
@@ -268,16 +287,23 @@
                             @csrf
                             @method('PUT')
 
-                            <div>
-                                <label for="edit_nama" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Lengkap Siswa *</label>
-                                <input type="text" name="nama" id="edit_nama" x-ref="editNamaInput" x-model="form.nama" required
-                                    class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="edit_nama" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Lengkap Siswa *</label>
+                                    <input type="text" name="nama" id="edit_nama" x-ref="editNamaInput" x-model="form.nama" required
+                                        class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
+                                </div>
+                                <div>
+                                    <label for="edit_username" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username</label>
+                                    <input type="text" name="username" id="edit_username" x-model="form.username" placeholder="Username login siswa"
+                                        class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
+                                </div>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label for="edit_email" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email Akun *</label>
-                                    <input type="email" name="email" id="edit_email" x-model="form.email" required
+                                    <label for="edit_email" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email Akun (Opsional)</label>
+                                    <input type="email" name="email" id="edit_email" x-model="form.email" placeholder="siswa@sekolah.sch.id"
                                         class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
                                 </div>
                                 <div>
@@ -433,6 +459,7 @@
                 form: {
                     id: '',
                     nama: '',
+                    username: '',
                     email: '',
                     kelas_id: '',
                     nis: '',

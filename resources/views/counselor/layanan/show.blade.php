@@ -103,7 +103,7 @@
         <!-- Outer dynamic grid layout -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <!-- Left Column: Main Content Area card -->
-            <div :class="(step === 1 || step === 2) ? 'lg:col-span-2' : 'lg:col-span-3'">
+            <div :class="(step === 1) ? 'lg:col-span-2' : 'lg:col-span-3'">
                 <div class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-outline-variant/30 min-h-[400px] flex flex-col justify-between">
                     <div>
                         <!-- TAHAP 1: MODELING -->
@@ -152,14 +152,42 @@
                             @php
                                 $kartuList = $module->materials->where('jenis', \App\Models\Material::JENIS_KARTU_SITUASI);
                             @endphp
-                            <div>
-                                <span class="px-2.5 py-1 bg-emerald-500 text-white text-xs font-bold rounded-lg uppercase tracking-wider">Tahap 2</span>
-                                <h3 class="text-xl font-black text-on-surface mt-2">Role Playing (Kartu Situasi)</h3>
-                                <p class="text-sm text-on-surface-variant mt-1 font-semibold font-medium">Siswa melatih respon empati secara berkelompok dengan memperagakan peran berdasarkan skenario kasus kartu situasi.</p>
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 pb-4">
+                                <div>
+                                    <span class="px-2.5 py-1 bg-emerald-500 text-white text-xs font-bold rounded-lg uppercase tracking-wider">Tahap 2</span>
+                                    <h3 class="text-xl font-black text-on-surface mt-2">Role Playing (Kartu Situasi)</h3>
+                                    <p class="text-sm text-on-surface-variant mt-1 font-semibold font-medium">Siswa melatih respon empati secara berkelompok dengan memperagakan peran berdasarkan skenario kasus kartu situasi.</p>
+                                </div>
+                                @if($kartuList->count() > 0)
+                                    <div class="flex items-center gap-2 shrink-0 flex-wrap">
+                                        <a href="{{ route('kartu-situasi.print', $module) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer">
+                                            <span class="material-symbols-outlined text-sm">print</span>
+                                            Cetak / Simpan PDF
+                                        </a>
+                                        <a href="{{ route('kartu-situasi.docx', $module) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer">
+                                            <span class="material-symbols-outlined text-sm">download</span>
+                                            Unduh Word (.docx)
+                                        </a>
+                                    </div>
+                                @endif
                             </div>
 
+                            @if($module->guide_role_playing)
+                                <div class="bg-indigo-50/70 border border-indigo-150 rounded-2xl p-5 shadow-xs flex items-start gap-4">
+                                    <div class="flex-grow">
+                                        <h4 class="text-xs font-black text-indigo-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                            <span>📖 Panduan Bimbingan Konselor</span>
+                                            <span class="px-1.5 py-0.5 bg-indigo-100 text-indigo-850 text-[9px] font-black rounded uppercase">Tahap 2</span>
+                                        </h4>
+                                        <div class="text-xs text-indigo-950/80 leading-relaxed font-semibold prose prose-sm max-w-none counselor-steps-rendered">
+                                            {!! $module->guide_role_playing !!}
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
                             @if($kartuList->count() > 0)
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 justify-center w-full">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center w-full">
                                     @foreach($kartuList as $kartu)
                                         <!-- Premium Kartu Situasi Render (Mockup Style) -->
                                         <div class="w-full bg-white border-2 border-emerald-600/30 rounded-[2rem] p-6 shadow-md relative overflow-hidden flex flex-col justify-between">
@@ -239,6 +267,18 @@
                                                         @endforeach
                                                     </ul>
                                                 </div>
+                                            </div>
+
+                                            <!-- Card Action Footer -->
+                                            <div class="mt-4 pt-3 border-t border-emerald-100/60 flex items-center justify-end gap-2">
+                                                <a href="{{ route('kartu-situasi.print-single', $kartu) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg transition">
+                                                    <span class="material-symbols-outlined text-[14px]">print</span>
+                                                    Cetak Kartu Ini
+                                                </a>
+                                                <a href="{{ route('kartu-situasi.docx-single', $kartu) }}" class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition">
+                                                    <span class="material-symbols-outlined text-[14px]">download</span>
+                                                    Word
+                                                </a>
                                             </div>
                                         </div>
                                     @endforeach
@@ -323,9 +363,9 @@
             </div>
 
             <!-- Right Column: Sidebar Standalone Counselor Guide -->
-            <div x-show="step === 1 || step === 2" class="lg:col-span-1 space-y-6">
+            <div x-show="step === 1" class="lg:col-span-1 space-y-6">
                 <!-- TAHAP 1: MODELING GUIDE -->
-                <div x-show="step === 1" x-transition>
+                <div>
                     @if($module->guide_modeling)
                         <div class="bg-indigo-50/70 border border-indigo-150 rounded-2xl p-5 shadow-xs sticky top-6">
                             <div class="flex items-start gap-3">
@@ -336,25 +376,6 @@
                                     </h4>
                                     <div class="text-xs text-indigo-950/80 leading-relaxed font-semibold prose prose-sm max-w-none counselor-steps-rendered">
                                         {!! $module->guide_modeling !!}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-
-                <!-- TAHAP 2: ROLE PLAYING GUIDE -->
-                <div x-show="step === 2" x-transition>
-                    @if($module->guide_role_playing)
-                        <div class="bg-indigo-50/70 border border-indigo-150 rounded-2xl p-5 shadow-xs sticky top-6">
-                            <div class="flex items-start gap-3">
-                                <div class="flex-grow">
-                                    <h4 class="text-xs font-black text-indigo-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                        <span>📖 Panduan Konselor</span>
-                                        <span class="px-1.5 py-0.5 bg-indigo-100 text-indigo-850 text-[9px] font-black rounded uppercase">Tahap 2</span>
-                                    </h4>
-                                    <div class="text-xs text-indigo-950/80 leading-relaxed font-semibold prose prose-sm max-w-none counselor-steps-rendered">
-                                        {!! $module->guide_role_playing !!}
                                     </div>
                                 </div>
                             </div>

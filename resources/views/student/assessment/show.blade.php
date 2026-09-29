@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ $assessment->jenis === 'pre_test' ? 'Pre-Test' : ($assessment->jenis === 'post_test' ? 'Post-Test' : 'Tahap 4: Transfer of Training') }} - {{ $assessment->judul }}</title>
+        <title>Tahap 4: Transfer of Training - {{ $assessment->judul }}</title>
 
         <!-- Google Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,13 +36,7 @@
                 <div class="flex flex-col">
                     <span class="text-sm font-black text-slate-800 leading-none">LENTERA ASESMEN</span>
                     <span class="text-[9px] text-purple-600 uppercase tracking-widest font-black mt-0.5">
-                        @if($assessment->jenis === 'pre_test')
-                            Pre-Test Awal
-                        @elseif($assessment->jenis === 'post_test')
-                            Post-Test Akhir
-                        @else
-                            Tahap 4 • Transfer of Training
-                        @endif
+                        Tahap 4 • Transfer of Training
                     </span>
                 </div>
             </div>
@@ -67,15 +61,9 @@
                                 <span class="material-symbols-outlined text-[28px] text-white" style="font-variation-settings: 'FILL' 1;">psychology</span>
                             </div>
                             <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur text-white text-[10px] font-black rounded-full mb-2 uppercase tracking-wider">
-                                @if($assessment->jenis === 'pre_test')
-                                    Pre-Test Pelatihan
-                                @elseif($assessment->jenis === 'post_test')
-                                    Post-Test Evaluasi Akhir
-                                @else
-                                    Tahap 4 • Transfer of Training (LKPD Online)
-                                @endif
+                                Instrumen Asesmen ({{ \App\Models\Assessment::JENIS_OPTIONS[$assessment->jenis] ?? 'Asesmen' }})
                             </span>
-                            <h1 class="text-2xl sm:text-3xl font-black mb-1.5">{{ $assessment->judul ?? 'Lembar Kerja Peserta Didik (LKPD)' }}</h1>
+                            <h1 class="text-2xl sm:text-3xl font-black mb-1.5">{{ $assessment->judul ?? 'Asesmen Siswa' }}</h1>
                             <p class="text-indigo-100 text-xs sm:text-sm font-bold">
                                 Topik {{ $assessment->module->urutan ?? 1 }}: {{ $assessment->module->judul ?? 'Modul' }}
                             </p>
@@ -106,13 +94,13 @@
                         <!-- Guide Transfer from Counselor (If available) -->
                         @if($assessment->module->guide_transfer)
                             <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4.5">
-                                <div class="flex items-center gap-2 text-indigo-900 mb-1.5 font-extrabold text-xs uppercase tracking-wider">
+                                <div class="flex items-center gap-2 text-indigo-900 mb-2 font-extrabold text-xs uppercase tracking-wider">
                                     <span class="material-symbols-outlined text-[18px]">campaign</span>
                                     Petunjuk Konselor (Tahap 4)
                                 </div>
-                                <p class="text-xs text-slate-700 font-semibold leading-relaxed">
-                                    {{ $assessment->module->guide_transfer }}
-                                </p>
+                                <div class="text-xs text-slate-700 font-semibold leading-relaxed counselor-steps-rendered">
+                                    {!! $assessment->module->guide_transfer !!}
+                                </div>
                             </div>
                         @endif
 
