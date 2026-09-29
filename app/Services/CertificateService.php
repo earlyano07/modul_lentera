@@ -82,19 +82,18 @@ class CertificateService
                 $scores = array_filter([$eval->self_score, $eval->lkpd_score, $eval->commitment_score], fn($v) => $v !== null);
                 if (!empty($scores)) {
                     $details = $eval->getOverallDetails();
-                    $percentage = (float) ($details['percentage'] ?? 80.0);
-                    $category = $details['category'] ?? 'Baik';
+                    $percentage = (float) ($details['percentage'] ?? 0.0);
+                    $category = $details['category'] ?? 'Belum Dikerjakan';
                 }
             }
 
-            // Fallback to default passing grade if student completed but raw score missing
+            // Fallback: if topic has not been worked on, default to 0% and Belum Dikerjakan
             if ($percentage === null) {
-                $percentage = 80.0;
-                $category = 'Baik';
+                $percentage = 0.0;
+                $category = 'Belum Dikerjakan';
             }
 
             $totalPct += $percentage;
-            $countedModules++;
 
             // Clean topic title (e.g. remove "Topik X: " if present)
             $cleanTitle = preg_replace('/^Topik\s*\d+\s*:\s*/i', '', $module->judul);
@@ -110,8 +109,23 @@ class CertificateService
             ];
         }
 
-        $overallPct = $countedModules > 0 ? round($totalPct / $countedModules, 1) : 0.0;
-        $overallCat = StudentEvaluation::getCategoryFromPercentage($overallPct);
+        // Capaian keseluruhan diambil dari rata-rata nilai tiap topik
+        $totalTopicCount = count($topicScores);
+        if ($totalTopicCount > 0) {
+            $overallPct = round($totalPct / $totalTopicCount, 1);
+            if ($overallPct > 0) {
+                $overallCat = StudentEvaluation::getCategoryFromPercentage($overallPct);
+                $overallCategory = $overallCat['category'];
+                $overallLabel = number_format($overallPct, 1, ',', '.') . '% — ' . $overallCategory;
+            } else {
+                $overallCategory = 'Belum Dikerjakan';
+                $overallLabel = '0% — Belum Dikerjakan';
+            }
+        } else {
+            $overallPct = 0.0;
+            $overallCategory = 'Belum Dikerjakan';
+            $overallLabel = '0% — Belum Dikerjakan';
+        }
 
         // 2. Format Certificate Number
         $certNumber = $this->formatCertificateNumber($template, $student);
@@ -132,6 +146,90 @@ class CertificateService
                 : Carbon::now()->locale('id')->translatedFormat('d F Y');
         }
 
+        // 4. Resolve Student Commitment (Lembar Komitmen)
+        // Check for completed final commitment sheet (Module >= 6 / post-5-topics)
+        $progressService = app(ProgressService::class);
+        $finalModule = $progressService->getFinalCommitmentModule();
+
+        $finalCommitProgress = null;
+        if ($finalModule) {
+            $finalCommitProgress = StudentProgress::where('student_id', $student->id)
+                ->where('module_id', $finalModule->id)
+                ->where('status', 'selesai')
+                ->with(['assessment.questions.options'])
+                ->latest('finished_at')
+                ->first();
+        }
+
+        if (!$finalCommitProgress) {
+            $finalCommitProgress = StudentProgress::where('student_id', $student->id)
+                ->where('status', 'selesai')
+                ->whereHas('assessment', function ($q) {
+                    $q->where(function ($sub) {
+                        $sub->where('jenis', 'lembar_komitmen')
+                            ->orWhere('judul', 'like', '%komitmen%');
+                    })->whereHas('module', function ($m) {
+                        $m->where('urutan', '>=', 6);
+                    });
+                })
+                ->with(['assessment.questions.options'])
+                ->latest('finished_at')
+                ->first();
+        }
+
+        if (!$finalCommitProgress) {
+            $finalCommitProgress = StudentProgress::where('student_id', $student->id)
+                ->where('status', 'selesai')
+                ->whereHas('assessment', function ($q) {
+                    $q->where('jenis', 'lembar_komitmen');
+                })
+                ->with(['assessment.questions.options'])
+                ->latest('finished_at')
+                ->first();
+        }
+
+        $studentCommitmentText = null;
+        $studentCommitmentPoints = [];
+
+        if ($finalCommitProgress && $finalCommitProgress->assessment) {
+            $answers = (array) ($finalCommitProgress->answers ?? []);
+
+            foreach ($finalCommitProgress->assessment->questions as $q) {
+                $ans = $answers[$q->id] ?? $answers[(string) $q->id] ?? null;
+                if ($ans === null) continue;
+
+                if ($q->type === 'essay' || str_contains(strtolower($q->question), 'komitmen pribadi')) {
+                    if (empty($studentCommitmentText) && !empty(trim((string) $ans))) {
+                        $studentCommitmentText = trim((string) $ans);
+                    }
+                } elseif ($q->type === 'checklist') {
+                    $selectedIds = is_array($ans) ? $ans : [$ans];
+                    foreach ($q->options as $opt) {
+                        if (in_array((string) $opt->id, array_map('strval', $selectedIds), true) ||
+                            in_array($opt->option, $selectedIds, true) ||
+                            in_array((string) $opt->label, array_map('strval', $selectedIds), true)) {
+                            $studentCommitmentPoints[] = rtrim($opt->option, ';.');
+                        }
+                    }
+                } elseif ($q->type === 'multiple_choice') {
+                    foreach ($q->options as $opt) {
+                        if ((string) $opt->id === (string) $ans || $opt->option === $ans) {
+                            $studentCommitmentPoints[] = rtrim($opt->option, ';.');
+                        }
+                    }
+                } else {
+                    if (empty($studentCommitmentText) && is_string($ans) && !is_numeric($ans) && strlen(trim($ans)) > 2) {
+                        $studentCommitmentText = trim($ans);
+                    }
+                }
+            }
+        }
+
+        $studentCommitmentPoints = array_values(array_unique(array_filter($studentCommitmentPoints)));
+        if (empty($studentCommitmentPoints)) {
+            $studentCommitmentPoints = $template->commitment_points ?? [];
+        }
+
         return [
             'template' => $template,
             'student' => $student,
@@ -147,8 +245,10 @@ class CertificateService
             'topic_scores' => $topicScores,
             'overall_percentage' => $overallPct,
             'overall_percentage_formatted' => number_format($overallPct, 1, ',', '.') . '%',
-            'overall_category' => $overallCat['category'],
-            'overall_label' => number_format($overallPct, 1, ',', '.') . '% — ' . $overallCat['category'],
+            'overall_category' => $overallCategory,
+            'overall_label' => $overallLabel,
+            'student_commitment_text' => $studentCommitmentText,
+            'student_commitment_points' => $studentCommitmentPoints,
             'is_sample' => false,
         ];
     }
@@ -241,6 +341,8 @@ class CertificateService
             'overall_percentage_formatted' => '84,6%',
             'overall_category' => 'Baik',
             'overall_label' => '84,6% — Baik',
+            'student_commitment_text' => 'Mulai sekarang, saya akan berusaha mendengarkan teman, membela teman yang diejek, dan selalu bersikap jujur.',
+            'student_commitment_points' => $template->commitment_points ?? [],
             'is_sample' => true,
         ];
     }
@@ -290,6 +392,7 @@ class CertificateService
 
         $templateProcessor->setValue('nilai_akhir', $certData['overall_percentage_formatted'] ?? '');
         $templateProcessor->setValue('predikat_akhir', $certData['overall_category'] ?? '');
+        $templateProcessor->setValue('komitmen_pribadi', $certData['student_commitment_text'] ?? '');
 
         $tempDir = storage_path('app/temp');
         if (!file_exists($tempDir)) {
@@ -302,16 +405,18 @@ class CertificateService
         $templateProcessor->saveAs($outputPath);
 
         // Ensure orientation is landscape and paper size is strictly A4 (297mm x 210mm)
-        $this->enforceA4Landscape($outputPath);
+        // and inject student commitment checklist and essay into Word document
+        $this->postProcessDocx($outputPath, $certData);
 
         return $outputPath;
     }
 
     /**
-     * Enforce A4 Landscape page setup on a Word .docx file
-     * OpenXML: width 16838 twips (297mm), height 11906 twips (210mm), orient="landscape"
+     * Post-process generated .docx file:
+     * 1. Enforce A4 Landscape page setup (297mm x 210mm)
+     * 2. Dynamically inject student's selected commitment points and personal commitment statement
      */
-    public function enforceA4Landscape(string $docxPath): void
+    public function postProcessDocx(string $docxPath, array $certData = []): void
     {
         if (!file_exists($docxPath) || !class_exists('\ZipArchive')) {
             return;
@@ -321,17 +426,72 @@ class CertificateService
         if ($zip->open($docxPath) === true) {
             $xml = $zip->getFromName('word/document.xml');
             if ($xml !== false) {
-                // 16838 twips = 297mm (A4 Landscape Width), 11906 twips = 210mm (A4 Landscape Height)
+                // 1. Enforce A4 Landscape: width 16838 twips (297mm), height 11906 twips (210mm)
                 $landscapePgSz = '<w:pgSz w:orient="landscape" w:w="16838" w:h="11906"/>';
                 if (preg_match('/<w:pgSz\b[^>]*(?:\/>|>.*?<\/w:pgSz>)/is', $xml)) {
                     $xml = preg_replace('/<w:pgSz\b[^>]*(?:\/>|>.*?<\/w:pgSz>)/is', $landscapePgSz, $xml);
                 } else {
                     $xml = preg_replace('/<w:sectPr\b([^>]*)>/i', '<w:sectPr$1>' . $landscapePgSz, $xml);
                 }
+
+                // 2. Inject student commitment checklist points if available
+                if (!empty($certData['student_commitment_points'])) {
+                    $introTag = 'Setelah mengikuti rangkaian LENTERA, saya berkomitmen untuk:';
+                    $personalTag = 'Komitmen pribadi saya:';
+
+                    $introPos = strpos($xml, $introTag);
+                    $personalPos = strpos($xml, $personalTag);
+
+                    if ($introPos !== false && $personalPos !== false) {
+                        $pIntroEnd = strpos($xml, '</w:p>', $introPos) + 6;
+                        if (preg_match_all('/<w:p\b[^>]*>/', substr($xml, 0, $personalPos), $matches, PREG_OFFSET_CAPTURE)) {
+                            $lastMatch = end($matches[0]);
+                            $pPersonalStart = $lastMatch[1];
+
+                            if ($pIntroEnd !== false && $pPersonalStart > $pIntroEnd) {
+                                $checklistXml = '';
+                                foreach ($certData['student_commitment_points'] as $pt) {
+                                    $cleanPt = htmlspecialchars($pt, ENT_XML1);
+                                    $checklistXml .= '<w:p><w:pPr><w:spacing w:after="10"/></w:pPr><w:r><w:rPr><w:color w:val="1F2937"/><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:t xml:space="preserve">&#x2611; ' . $cleanPt . '</w:t></w:r></w:p>';
+                                }
+                                $xml = substr($xml, 0, $pIntroEnd) . $checklistXml . substr($xml, $pPersonalStart);
+                            }
+                        }
+                    }
+                }
+
+                // 3. Inject student personal commitment essay if available
+                if (!empty($certData['student_commitment_text'])) {
+                    $lines = explode("\n", str_replace("\r", "", trim($certData['student_commitment_text'])));
+                    $essayXml = '';
+                    $nonEmptyLines = array_values(array_filter(array_map('trim', $lines), fn($l) => $l !== ''));
+                    $lineCount = count($nonEmptyLines);
+
+                    foreach ($nonEmptyLines as $idx => $line) {
+                        $prefix = ($idx === 0) ? '&#x201C;' : '';
+                        $suffix = ($idx === $lineCount - 1) ? '&#x201D;' : '';
+                        $cleanLine = htmlspecialchars($line, ENT_XML1);
+                        $essayXml .= '<w:p><w:pPr><w:spacing w:before="10" w:after="10"/></w:pPr><w:r><w:rPr><w:color w:val="065F46"/><w:sz w:val="17"/><w:szCs w:val="17"/><w:b w:val="1"/><w:bCs w:val="1"/><w:i w:val="1"/><w:iCs w:val="1"/></w:rPr><w:t xml:space="preserve">' . $prefix . $cleanLine . $suffix . '</w:t></w:r></w:p>';
+                    }
+
+                    $pattern = '/<w:p\b[^>]*>(?:(?!<\/w:p>).)*?“Mulai sekarang, saya akan\.\.\.”.*?<\/w:p>\s*(?:<w:p\b[^>]*>(?:(?!<\/w:p>).)*?_{5,}.*?<\/w:p>)?/is';
+                    if (preg_match($pattern, $xml)) {
+                        $xml = preg_replace($pattern, $essayXml, $xml);
+                    }
+                }
+
                 $zip->addFromString('word/document.xml', $xml);
             }
             $zip->close();
         }
+    }
+
+    /**
+     * Enforce A4 Landscape page setup on a Word .docx file (backward compatibility alias)
+     */
+    public function enforceA4Landscape(string $docxPath): void
+    {
+        $this->postProcessDocx($docxPath, []);
     }
 }
 

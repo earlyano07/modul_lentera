@@ -177,15 +177,15 @@
                             </div>
 
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Sekolah yang Ditangani</label>
-                                <div class="max-h-36 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50 space-y-2">
-                                    @foreach($schools as $school)
-                                        <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
-                                            <input type="checkbox" name="schools[]" value="{{ $school->id }}" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                                            <span>{{ $school->nama }}</span>
-                                        </label>
-                                    @endforeach
+                                <label for="create_schools" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Sekolah yang Ditangani</label>
+                                <div class="select2-wrapper">
+                                    <select name="schools[]" id="create_schools" class="w-full" multiple="multiple" data-placeholder="Pilih satu atau lebih sekolah...">
+                                        @foreach($schools as $school)
+                                            <option value="{{ $school->id }}">{{ $school->nama }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
+                                <p class="text-[10px] text-slate-400 font-semibold mt-1">Bisa memilih lebih dari satu sekolah (multiple choice).</p>
                             </div>
 
                             <div class="flex items-center justify-end gap-3 border-t border-slate-100 pt-4 mt-6">
@@ -280,15 +280,15 @@
                             </div>
 
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Sekolah yang Ditangani</label>
-                                <div class="max-h-36 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50 space-y-2">
-                                    @foreach($schools as $school)
-                                        <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
-                                            <input type="checkbox" name="schools[]" value="{{ $school->id }}" :checked="form.school_ids.includes({{ $school->id }})" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                                            <span>{{ $school->nama }}</span>
-                                        </label>
-                                    @endforeach
+                                <label for="edit_schools" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Sekolah yang Ditangani</label>
+                                <div class="select2-wrapper">
+                                    <select name="schools[]" id="edit_schools" class="w-full" multiple="multiple" data-placeholder="Pilih satu atau lebih sekolah...">
+                                        @foreach($schools as $school)
+                                            <option value="{{ $school->id }}">{{ $school->nama }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
+                                <p class="text-[10px] text-slate-400 font-semibold mt-1">Bisa memilih lebih dari satu sekolah (multiple choice).</p>
                             </div>
 
                             <div class="flex items-center justify-end gap-3 border-t border-slate-100 pt-4 mt-6">
@@ -309,7 +309,114 @@
         </div>
     </div>
 
+    @push('styles')
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+        .select2-container--default .select2-selection--multiple {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            min-height: 42px;
+            padding: 3px 6px;
+            transition: all 0.2s;
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .select2-container--default.select2-container--focus .select2-selection--multiple {
+            border-color: #6366f1;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            outline: none;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #e0e7ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 0.5rem;
+            color: #4338ca;
+            padding: 2px 8px 2px 22px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            position: relative;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            color: #6366f1;
+            border: none;
+            background: transparent;
+            position: absolute;
+            left: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+            color: #ef4444;
+        }
+        .select2-container--default .select2-search--inline .select2-search__field {
+            font-family: inherit;
+            font-size: 0.75rem;
+            margin-top: 6px;
+            padding-left: 4px;
+            color: #1e293b;
+        }
+        .select2-dropdown {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            font-family: inherit;
+            font-size: 0.75rem;
+            overflow: hidden;
+            z-index: 9999999 !important;
+            background-color: #ffffff;
+        }
+        .select2-container--open {
+            z-index: 9999999 !important;
+        }
+        .select2-container--default .select2-search--dropdown {
+            padding: 8px;
+        }
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 6px 10px;
+            font-family: inherit;
+            font-size: 0.75rem;
+            background-color: #f8fafc;
+            outline: none;
+        }
+        .select2-container--default .select2-search--dropdown .select2-search__field:focus {
+            border-color: #6366f1;
+            background-color: #ffffff;
+        }
+        .select2-results__option {
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #4f46e5;
+            color: #ffffff;
+        }
+        .select2-container--default .select2-results__option[aria-selected=true] {
+            background-color: #e0e7ff;
+            color: #4338ca;
+            font-weight: 700;
+        }
+    </style>
+    @endpush
+
     @push('scripts')
+    <!-- jQuery and Select2 JS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('konselorManager', () => ({
@@ -328,6 +435,18 @@
                     this.showCreateModal = true;
                     this.$nextTick(() => {
                         this.$refs.createNamaInput?.focus();
+                        if (typeof $ !== 'undefined') {
+                            const $el = $('#create_schools');
+                            if (!$el.hasClass('select2-hidden-accessible')) {
+                                $el.select2({
+                                    placeholder: "Pilih satu atau lebih sekolah...",
+                                    allowClear: true,
+                                    width: '100%',
+                                    dropdownParent: $el.closest('.select2-wrapper')
+                                });
+                            }
+                            $el.val([]).trigger('change');
+                        }
                     });
                 },
                 openEditModal(data) {
@@ -336,11 +455,38 @@
                     this.$nextTick(() => {
                         this.$refs.editNamaInput?.focus();
                         this.$refs.editNamaInput?.select();
+                        if (typeof $ !== 'undefined') {
+                            const $el = $('#edit_schools');
+                            if (!$el.hasClass('select2-hidden-accessible')) {
+                                $el.select2({
+                                    placeholder: "Pilih satu atau lebih sekolah...",
+                                    allowClear: true,
+                                    width: '100%',
+                                    dropdownParent: $el.closest('.select2-wrapper')
+                                });
+                            }
+                            $el.val(data.school_ids || []).trigger('change');
+                        }
                     });
                 }
             }));
         });
+
+        $(document).ready(function() {
+            $('#create_schools').select2({
+                placeholder: "Pilih satu atau lebih sekolah...",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#create_schools').closest('.select2-wrapper')
+            });
+
+            $('#edit_schools').select2({
+                placeholder: "Pilih satu atau lebih sekolah...",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#edit_schools').closest('.select2-wrapper')
+            });
+        });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     @endpush
 </x-app-layout>

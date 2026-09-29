@@ -54,4 +54,9 @@ class StudentProgress extends Model
     {
         return $this->status === 'sedang_mengerjakan';
     }
+
+    public function getScoreAttribute(): ?float
+    {
+        return $this->nilai !== null ? (float) $this->nilai : null;
+    }
 }

@@ -42,6 +42,9 @@ class KelasController extends Controller
             'tahun_ajaran' => 'required|string|max:20',
         ]);
         Kelas::create($validated);
+        if ($request->filled('_redirect_to')) {
+            return redirect($request->input('_redirect_to'))->with('success', 'Kelas berhasil ditambahkan.');
+        }
         return redirect()->route('admin.kelas.index')->with('success', 'Kelas berhasil ditambahkan.');
     }
 

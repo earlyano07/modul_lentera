@@ -20,7 +20,10 @@ class ReportController extends Controller
         $assessmentResults = StudentProgress::where('student_id', $student->id)
             ->whereNotNull('assessment_id')->where('status', 'selesai')
             ->with(['assessment.module'])->orderBy('finished_at')->get();
-        return view('counselor.reports.student', compact('student', 'timeline', 'progressPercentage', 'assessmentResults'));
+        $evaluations = \App\Models\StudentEvaluation::where('student_id', $student->id)
+            ->with('module')
+            ->get();
+        return view('counselor.reports.student', compact('student', 'timeline', 'progressPercentage', 'assessmentResults', 'evaluations'));
     }
 
     public function studentPdf(Student $student)
@@ -31,7 +34,10 @@ class ReportController extends Controller
         $assessmentResults = StudentProgress::where('student_id', $student->id)
             ->whereNotNull('assessment_id')->where('status', 'selesai')
             ->with(['assessment.module'])->orderBy('finished_at')->get();
-        return view('counselor.reports.pdf.student-report', compact('student', 'timeline', 'progressPercentage', 'assessmentResults'));
+        $evaluations = \App\Models\StudentEvaluation::where('student_id', $student->id)
+            ->with('module')
+            ->get();
+        return view('counselor.reports.pdf.student-report', compact('student', 'timeline', 'progressPercentage', 'assessmentResults', 'evaluations'));
     }
 
     public function kelas(Kelas $kelas)

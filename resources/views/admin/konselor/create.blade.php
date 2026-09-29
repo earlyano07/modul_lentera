@@ -76,21 +76,21 @@
 
                 <!-- Schools Assignment -->
                 <div class="col-span-1 md:col-span-2">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Penugasan Sekolah</label>
-                    <div class="bg-gray-50 p-4 rounded border border-gray-300 max-h-60 overflow-y-auto">
-                        @if(count($schools) > 0)
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <label for="schools" class="block text-gray-700 text-sm font-bold mb-2">Penugasan Sekolah</label>
+                    @if(count($schools) > 0)
+                        <div class="select2-wrapper">
+                            <select name="schools[]" id="schools" class="w-full" multiple="multiple" data-placeholder="Pilih satu atau lebih sekolah...">
                                 @foreach($schools as $school)
-                                    <label class="flex items-start cursor-pointer">
-                                        <input type="checkbox" name="schools[]" value="{{ $school->id }}" {{ in_array($school->id, old('schools', [])) ? 'checked' : '' }} class="mt-1 shadow-xs border border-gray-300 rounded text-blue-500 focus:ring-blue-500 focus:ring-opacity-20">
-                                        <span class="ml-2 text-sm text-gray-700 font-medium">{{ $school->nama }}</span>
-                                    </label>
+                                    <option value="{{ $school->id }}" {{ in_array($school->id, old('schools', [])) ? 'selected' : '' }}>
+                                        {{ $school->nama }}
+                                    </option>
                                 @endforeach
-                            </div>
-                        @else
-                            <p class="text-sm text-gray-500">Belum ada data sekolah. Silakan <a href="{{ route('admin.schools.create') }}" class="text-blue-500 hover:text-blue-800 font-bold hover:underline">tambah sekolah</a> terlebih dahulu.</p>
-                        @endif
-                    </div>
+                            </select>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Bisa memilih lebih dari satu sekolah (multiple choice).</p>
+                    @else
+                        <p class="text-sm text-gray-500">Belum ada data sekolah. Silakan <a href="{{ route('admin.schools.create') }}" class="text-blue-500 hover:text-blue-800 font-bold hover:underline">tambah sekolah</a> terlebih dahulu.</p>
+                    @endif
                     @error('schools')
                         <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                     @enderror
@@ -103,4 +103,102 @@
             </div>
         </form>
     </div>
+
+    @push('styles')
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+        .select2-container--default .select2-selection--multiple {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            min-height: 42px;
+            padding: 3px 6px;
+            transition: all 0.2s;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .select2-container--default.select2-container--focus .select2-selection--multiple {
+            border-color: #3b82f6;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            outline: none;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #dbeafe;
+            border: 1px solid #bfdbfe;
+            border-radius: 0.375rem;
+            color: #1e40af;
+            padding: 2px 8px 2px 22px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            position: relative;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            color: #3b82f6;
+            border: none;
+            background: transparent;
+            position: absolute;
+            left: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+            color: #ef4444;
+        }
+        .select2-dropdown {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            font-family: inherit;
+            font-size: 0.875rem;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            padding: 6px 10px;
+            background-color: #f8fafc;
+            outline: none;
+        }
+        .select2-results__option {
+            padding: 8px 12px;
+            font-size: 0.875rem;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #3b82f6;
+            color: #ffffff;
+        }
+        .select2-container--default .select2-results__option[aria-selected=true] {
+            background-color: #dbeafe;
+            color: #1e40af;
+            font-weight: 600;
+        }
+    </style>
+    @endpush
+
+    @push('scripts')
+    <!-- jQuery and Select2 JS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#schools').select2({
+                placeholder: "Pilih satu atau lebih sekolah...",
+                allowClear: true,
+                width: '100%'
+            });
+        });
+    </script>
+    @endpush
 </x-app-layout>

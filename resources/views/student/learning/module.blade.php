@@ -13,7 +13,11 @@
             <li>
                 <div class="flex items-center">
                     <svg class="w-4 h-4 mx-1 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-                    <span class="text-slate-900 font-extrabold line-clamp-1">Topik {{ $module->urutan }}: {{ $module->judul }}</span>
+                    @if($module->urutan >= 6)
+                        <span class="text-slate-900 font-extrabold line-clamp-1">Tahap Akhir: {{ $module->judul }}</span>
+                    @else
+                        <span class="text-slate-900 font-extrabold line-clamp-1">Topik {{ $module->urutan }}: {{ $module->judul }}</span>
+                    @endif
                 </div>
             </li>
         </ol>
@@ -21,13 +25,17 @@
 
     <!-- Header Module -->
     <div class="bg-white rounded-3xl shadow-xs border border-slate-200/80 p-8 mb-8 relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-2.5 h-full bg-indigo-600"></div>
+        <div class="absolute top-0 left-0 w-2.5 h-full {{ $module->urutan >= 6 ? 'bg-amber-500' : 'bg-indigo-600' }}"></div>
         <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
             <div>
-                <span class="inline-block px-3 py-1 bg-indigo-50 text-indigo-800 text-[10px] font-black rounded-md mb-3 uppercase tracking-widest border border-indigo-100">Topik Pelatihan {{ $module->urutan }}</span>
+                @if($module->urutan >= 6)
+                    <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 text-[10px] font-black rounded-md mb-3 uppercase tracking-widest border border-amber-100">Tahap Akhir Layanan Model LENTERA</span>
+                @else
+                    <span class="inline-block px-3 py-1 bg-indigo-50 text-indigo-800 text-[10px] font-black rounded-md mb-3 uppercase tracking-widest border border-indigo-100">Topik Pelatihan {{ $module->urutan }}</span>
+                @endif
                 <h1 class="text-2xl sm:text-3xl font-black text-slate-900 mb-1.5">{{ $module->judul ?? 'Judul Topik' }}</h1>
                 @if($module->subtitle)
-                    <p class="text-xs sm:text-sm font-bold text-indigo-600 mb-3 italic">({{ $module->subtitle }})</p>
+                    <p class="text-xs sm:text-sm font-bold {{ $module->urutan >= 6 ? 'text-amber-600' : 'text-indigo-600' }} mb-3 italic">({{ $module->subtitle }})</p>
                 @endif
                 <p class="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-3xl font-medium">{{ $module->deskripsi ?? 'Deskripsi lengkap tentang topik ini.' }}</p>
             </div>
@@ -41,15 +49,23 @@
     <div class="space-y-6">
         <div class="flex items-center justify-between">
             <div>
-                <span class="inline-block px-3 py-1 bg-purple-50 text-purple-800 text-[10px] font-black rounded-md uppercase tracking-wider border border-purple-100 mb-1.5">
-                    Instrumen Asesmen Online
-                </span>
-                <h2 class="text-xl sm:text-2xl font-black text-slate-900 leading-tight">Pilih Lembar Kerja & Asesmen</h2>
-                <p class="text-xs text-slate-500 font-semibold mt-1">Selesaikan 3 instrumen di bawah ini untuk melengkapi evaluasi bimbingan pada Topik {{ $module->urutan }}.</p>
+                @if($module->urutan >= 6)
+                    <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 text-[10px] font-black rounded-md uppercase tracking-wider border border-amber-100 mb-1.5">
+                        Komitmen Pasca Pembelajaran
+                    </span>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 leading-tight">Lembar Komitmen Siswa</h2>
+                    <p class="text-xs text-slate-500 font-semibold mt-1">Lengkapi lembar komitmen di bawah ini untuk mengukuhkan pemahaman empati Anda dan melengkapi syarat penerbitan sertifikat.</p>
+                @else
+                    <span class="inline-block px-3 py-1 bg-purple-50 text-purple-800 text-[10px] font-black rounded-md uppercase tracking-wider border border-purple-100 mb-1.5">
+                        Instrumen Asesmen Online
+                    </span>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 leading-tight">Pilih Lembar Kerja & Asesmen</h2>
+                    <p class="text-xs text-slate-500 font-semibold mt-1">Selesaikan 3 instrumen di bawah ini untuk melengkapi evaluasi bimbingan pada Topik {{ $module->urutan }}.</p>
+                @endif
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 {{ $module->urutan >= 6 ? 'max-w-xl' : 'md:grid-cols-3' }} gap-6">
             @forelse($stageAssessments as $assessment)
                 @php
                     $assessmentProgress = \App\Models\StudentProgress::where('student_id', auth()->user()->student->id)

@@ -33,6 +33,95 @@
                 </div>
             @endif
 
+            <!-- Filter Section -->
+            <div class="mb-6 p-5 bg-white rounded-2xl shadow-xs border border-slate-200/80">
+                <form method="GET" action="{{ route('admin.students.index') }}">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-indigo-600 text-xl">tune</span>
+                            <div>
+                                <h2 class="text-sm font-extrabold text-slate-800">Filter Data Siswa</h2>
+                                <p class="text-[11px] text-slate-400 font-medium">Saring data siswa berdasarkan sekolah dan kelas / rombel</p>
+                            </div>
+                        </div>
+                        @if(request()->filled('school_id') || request()->filled('kelas_id'))
+                            <a href="{{ route('admin.students.index') }}" 
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/60 transition w-fit">
+                                <span class="material-symbols-outlined text-[15px]">restart_alt</span>
+                                Reset Filter
+                            </a>
+                        @endif
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 pt-4 items-end">
+                        <!-- Filter Sekolah -->
+                        <div class="md:col-span-5">
+                            <label for="filter_school_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                                Sekolah
+                            </label>
+                            <select name="school_id" id="filter_school_id" x-model="filterSchoolId" @change="filterKelasId = ''"
+                                class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
+                                <option value="">-- Semua Sekolah --</option>
+                                @foreach($schools as $school)
+                                    <option value="{{ $school->id }}" {{ request('school_id') == $school->id ? 'selected' : '' }}>
+                                        {{ $school->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Filter Kelas -->
+                        <div class="md:col-span-5">
+                            <label for="filter_kelas_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                                Kelas
+                            </label>
+                            <select name="kelas_id" id="filter_kelas_id" x-model="filterKelasId" :disabled="!filterSchoolId"
+                                class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                                <option value="" x-text="filterSchoolId ? '-- Semua Kelas --' : '-- Pilih Sekolah Terlebih Dahulu --'"></option>
+                                <template x-for="k in filteredFilterClasses" :key="k.id">
+                                    <option :value="k.id" x-text="k.nama_kelas + (k.tingkat ? ' (' + k.tingkat + ')' : '')" :selected="k.id == filterKelasId"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        <!-- Tombol Terapkan -->
+                        <div class="md:col-span-2">
+                            <button type="submit" 
+                                class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-xl shadow-xs hover:shadow-md transition duration-200 cursor-pointer">
+                                <span class="material-symbols-outlined text-[16px]">filter_list</span>
+                                Terapkan
+                            </button>
+                        </div>
+                    </div>
+
+                    @if(request()->filled('school_id') || request()->filled('kelas_id'))
+                        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-500 flex-wrap">
+                            <span class="font-bold text-slate-700">Filter Aktif:</span>
+                            @if(request()->filled('school_id'))
+                                @php $selectedSchool = $schools->firstWhere('id', request('school_id')); @endphp
+                                @if($selectedSchool)
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                                        <span class="material-symbols-outlined text-[13px]">school</span>
+                                        {{ $selectedSchool->nama }}
+                                    </span>
+                                @endif
+                            @endif
+                            @if(request()->filled('kelas_id'))
+                                @php $selectedKelas = $kelasList->firstWhere('id', request('kelas_id')); @endphp
+                                @if($selectedKelas)
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
+                                        <span class="material-symbols-outlined text-[13px]">class</span>
+                                        Kelas {{ $selectedKelas->nama_kelas }}
+                                    </span>
+                                @endif
+                            @endif
+                            <span class="text-slate-400">•</span>
+                            <span class="font-medium text-slate-600">Ditemukan <strong>{{ $students->count() }}</strong> siswa</span>
+                        </div>
+                    @endif
+                </form>
+            </div>
+
             <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-100 js-datatable">
@@ -95,6 +184,7 @@
                                                 'nama' => $student->user->nama ?? '',
                                                 'username' => $student->user->username ?? '',
                                                 'email' => $student->user->email ?? '',
+                                                'school_id' => $student->kelas->school_id ?? '',
                                                 'kelas_id' => $student->kelas_id,
                                                 'nis' => $student->nis ?? '',
                                                 'jenis_kelamin' => $student->jenis_kelamin,
@@ -195,23 +285,33 @@
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label for="create_kelas_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kelas *</label>
-                                    <select name="kelas_id" id="create_kelas_id" required
+                                    <label for="create_school_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Sekolah *</label>
+                                    <select name="school_id" id="create_school_id" x-model="createSchoolId" @change="createKelasId = ''" required
                                         class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
-                                        <option value="">-- Pilih Kelas --</option>
-                                        @foreach($kelasList as $kelas)
-                                            <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }} ({{ $kelas->school->nama ?? '-' }})</option>
+                                        <option value="">-- Pilih Sekolah --</option>
+                                        @foreach($schools as $school)
+                                            <option value="{{ $school->id }}">{{ $school->nama }}</option>
                                         @endforeach
                                     </select>
                                 </div>
+                                <div>
+                                    <label for="create_kelas_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kelas *</label>
+                                    <select name="kelas_id" id="create_kelas_id" x-model="createKelasId" :disabled="!createSchoolId" required
+                                        class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                                        <option value="" x-text="createSchoolId ? '-- Pilih Kelas --' : '-- Pilih Sekolah Terlebih Dahulu --'"></option>
+                                        <template x-for="k in filteredCreateClasses" :key="k.id">
+                                            <option :value="k.id" x-text="k.nama_kelas + (k.tingkat ? ' (' + k.tingkat + ')' : '')"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label for="create_nis" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">NIS *</label>
                                     <input type="text" name="nis" id="create_nis" required placeholder="Nomor Induk Siswa"
                                         class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
                                 </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label for="create_jenis_kelamin" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Jenis Kelamin *</label>
                                     <select name="jenis_kelamin" id="create_jenis_kelamin" required
@@ -221,6 +321,9 @@
                                         <option value="P">Perempuan</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label for="create_tanggal_lahir" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Tanggal Lahir *</label>
                                     <input type="date" name="tanggal_lahir" id="create_tanggal_lahir" required
@@ -315,23 +418,33 @@
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label for="edit_kelas_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kelas *</label>
-                                    <select name="kelas_id" id="edit_kelas_id" x-model="form.kelas_id" required
+                                    <label for="edit_school_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Sekolah *</label>
+                                    <select name="school_id" id="edit_school_id" x-model="form.school_id" @change="form.kelas_id = ''" required
                                         class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
-                                        <option value="">-- Pilih Kelas --</option>
-                                        @foreach($kelasList as $kelas)
-                                            <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }} ({{ $kelas->school->nama ?? '-' }})</option>
+                                        <option value="">-- Pilih Sekolah --</option>
+                                        @foreach($schools as $school)
+                                            <option value="{{ $school->id }}">{{ $school->nama }}</option>
                                         @endforeach
                                     </select>
                                 </div>
+                                <div>
+                                    <label for="edit_kelas_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kelas *</label>
+                                    <select name="kelas_id" id="edit_kelas_id" x-model="form.kelas_id" :disabled="!form.school_id" required
+                                        class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                                        <option value="" x-text="form.school_id ? '-- Pilih Kelas --' : '-- Pilih Sekolah Terlebih Dahulu --'"></option>
+                                        <template x-for="k in filteredEditClasses" :key="k.id">
+                                            <option :value="k.id" x-text="k.nama_kelas + (k.tingkat ? ' (' + k.tingkat + ')' : '')"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label for="edit_nis" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">NIS *</label>
                                     <input type="text" name="nis" id="edit_nis" x-model="form.nis" required
                                         class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
                                 </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label for="edit_jenis_kelamin" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Jenis Kelamin *</label>
                                     <select name="jenis_kelamin" id="edit_jenis_kelamin" x-model="form.jenis_kelamin" required
@@ -340,6 +453,9 @@
                                         <option value="P">Perempuan</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label for="edit_tanggal_lahir" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Tanggal Lahir *</label>
                                     <input type="date" name="tanggal_lahir" id="edit_tanggal_lahir" x-model="form.tanggal_lahir" required
@@ -405,15 +521,27 @@
                         <form action="{{ route('admin.students.import') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                             @csrf
 
-                            <div>
-                                <label for="import_kelas_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kelas Tujuan *</label>
-                                <select name="kelas_id" id="import_kelas_id" required
-                                    class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
-                                    <option value="">-- Pilih Kelas --</option>
-                                    @foreach($kelasList as $kelas)
-                                        <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }} ({{ $kelas->school->nama ?? '-' }})</option>
-                                    @endforeach
-                                </select>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="import_school_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Sekolah *</label>
+                                    <select id="import_school_id" x-model="importSchoolId" @change="importKelasId = ''" required
+                                        class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition">
+                                        <option value="">-- Pilih Sekolah --</option>
+                                        @foreach($schools as $school)
+                                            <option value="{{ $school->id }}">{{ $school->nama }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="import_kelas_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kelas Tujuan *</label>
+                                    <select name="kelas_id" id="import_kelas_id" x-model="importKelasId" :disabled="!importSchoolId" required
+                                        class="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                                        <option value="" x-text="importSchoolId ? '-- Pilih Kelas --' : '-- Pilih Sekolah Terlebih Dahulu --'"></option>
+                                        <template x-for="k in filteredImportClasses" :key="k.id">
+                                            <option :value="k.id" x-text="k.nama_kelas + (k.tingkat ? ' (' + k.tingkat + ')' : '')"></option>
+                                        </template>
+                                    </select>
+                                </div>
                             </div>
 
                             <div>
@@ -450,40 +578,75 @@
 
     @push('scripts')
     <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('studentManager', () => ({
-                showCreateModal: false,
-                showEditModal: false,
-                showImportModal: false,
-                importFileName: '',
-                form: {
-                    id: '',
-                    nama: '',
-                    username: '',
-                    email: '',
-                    kelas_id: '',
-                    nis: '',
-                    jenis_kelamin: 'L',
-                    tanggal_lahir: '',
-                    update_url: ''
-                },
-                openCreateModal() {
-                    this.showCreateModal = true;
-                    this.$nextTick(() => {
-                        this.$refs.createNamaInput?.focus();
-                    });
-                },
-                openEditModal(data) {
-                    this.form = { ...data };
-                    this.showEditModal = true;
-                    this.$nextTick(() => {
-                        this.$refs.editNamaInput?.focus();
-                        this.$refs.editNamaInput?.select();
-                    });
+        (function() {
+            function initStudentManager() {
+                if (typeof Alpine !== 'undefined') {
+                    Alpine.data('studentManager', () => ({
+                        showCreateModal: false,
+                        showEditModal: false,
+                        showImportModal: false,
+                        importFileName: '',
+                        createSchoolId: '',
+                        createKelasId: '',
+                        importSchoolId: '',
+                        importKelasId: '',
+                        filterSchoolId: @json(request('school_id', '')),
+                        filterKelasId: @json(request('kelas_id', '')),
+                        allClasses: @json($classesData),
+                        form: {
+                            id: '',
+                            nama: '',
+                            username: '',
+                            email: '',
+                            school_id: '',
+                            kelas_id: '',
+                            nis: '',
+                            jenis_kelamin: 'L',
+                            tanggal_lahir: '',
+                            update_url: ''
+                        },
+                        get filteredFilterClasses() {
+                            if (!this.filterSchoolId) return [];
+                            return this.allClasses.filter(k => k.school_id == this.filterSchoolId);
+                        },
+                        get filteredCreateClasses() {
+                            if (!this.createSchoolId) return [];
+                            return this.allClasses.filter(k => k.school_id == this.createSchoolId);
+                        },
+                        get filteredEditClasses() {
+                            if (!this.form.school_id) return [];
+                            return this.allClasses.filter(k => k.school_id == this.form.school_id);
+                        },
+                        get filteredImportClasses() {
+                            if (!this.importSchoolId) return [];
+                            return this.allClasses.filter(k => k.school_id == this.importSchoolId);
+                        },
+                        openCreateModal() {
+                            this.createSchoolId = '';
+                            this.createKelasId = '';
+                            this.showCreateModal = true;
+                            this.$nextTick(() => {
+                                this.$refs.createNamaInput?.focus();
+                            });
+                        },
+                        openEditModal(data) {
+                            this.form = { ...data };
+                            this.showEditModal = true;
+                            this.$nextTick(() => {
+                                this.$refs.editNamaInput?.focus();
+                                this.$refs.editNamaInput?.select();
+                            });
+                        }
+                    }));
                 }
-            }));
-        });
+            }
+
+            if (window.Alpine) {
+                initStudentManager();
+            } else {
+                document.addEventListener('alpine:init', initStudentManager);
+            }
+        })();
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     @endpush
 </x-app-layout>

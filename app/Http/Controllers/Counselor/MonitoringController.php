@@ -157,10 +157,17 @@ class MonitoringController extends Controller
         $currentStage = $this->progressService->getCurrentStage($student);
         $statusLabel = $this->progressService->getCurrentStatusLabel($student);
 
+        // Final Commitment Module (Pasca 5 Topik)
+        $finalCommitmentModule = $this->progressService->getFinalCommitmentModule();
+        if ($finalCommitmentModule) {
+            $finalCommitmentModule->load(['assessments.questions.options', 'materials']);
+        }
+
         return view('counselor.monitoring.student-detail', compact(
             'student',
             'classStudents',
             'modules',
+            'finalCommitmentModule',
             'evaluations',
             'progressList',
             'timeline',

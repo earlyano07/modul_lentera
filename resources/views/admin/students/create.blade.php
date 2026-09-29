@@ -14,7 +14,15 @@
         </nav>
     </div>
 
-    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" x-data="{
+        selectedSchool: '{{ old('school_id', '') }}',
+        selectedKelas: '{{ old('kelas_id', '') }}',
+        allClasses: @json($classesData),
+        get filteredClasses() {
+            if (!this.selectedSchool) return [];
+            return this.allClasses.filter(k => k.school_id == this.selectedSchool);
+        }
+    }">
         <form action="{{ route('admin.students.store') }}" method="POST">
             @csrf
             
@@ -65,11 +73,16 @@
                     <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Data Akademik</h2>
                 </div>
 
-                <!-- NIS -->
+                <!-- Sekolah -->
                 <div>
-                    <label for="nis" class="block text-gray-700 text-sm font-bold mb-2">NIS</label>
-                    <input type="text" name="nis" id="nis" value="{{ old('nis') }}" class="shadow appearance-none @error('nis') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    @error('nis')
+                    <label for="school_id" class="block text-gray-700 text-sm font-bold mb-2">Sekolah *</label>
+                    <select name="school_id" id="school_id" x-model="selectedSchool" @change="selectedKelas = ''" required class="shadow appearance-none @error('school_id') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="">-- Pilih Sekolah --</option>
+                        @foreach($schools ?? [] as $school)
+                            <option value="{{ $school->id }}">{{ $school->nama }}</option>
+                        @endforeach
+                    </select>
+                    @error('school_id')
                         <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                     @enderror
                 </div>
@@ -77,15 +90,22 @@
                 <!-- Kelas -->
                 <div>
                     <label for="kelas_id" class="block text-gray-700 text-sm font-bold mb-2">Kelas *</label>
-                    <select name="kelas_id" id="kelas_id" required class="shadow appearance-none @error('kelas_id') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <option value="">-- Pilih Kelas --</option>
-                        @foreach($kelasList ?? [] as $kelas)
-                            <option value="{{ $kelas->id }}" {{ old('kelas_id') == $kelas->id ? 'selected' : '' }}>
-                                {{ $kelas->nama_kelas }} ({{ $kelas->school->nama ?? '' }})
-                            </option>
-                        @endforeach
+                    <select name="kelas_id" id="kelas_id" x-model="selectedKelas" :disabled="!selectedSchool" required class="shadow appearance-none @error('kelas_id') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed">
+                        <option value="" x-text="selectedSchool ? '-- Pilih Kelas --' : '-- Pilih Sekolah Terlebih Dahulu --'"></option>
+                        <template x-for="k in filteredClasses" :key="k.id">
+                            <option :value="k.id" x-text="k.nama_kelas + (k.tingkat ? ' (' + k.tingkat + ')' : '')"></option>
+                        </template>
                     </select>
                     @error('kelas_id')
+                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- NIS -->
+                <div>
+                    <label for="nis" class="block text-gray-700 text-sm font-bold mb-2">NIS *</label>
+                    <input type="text" name="nis" id="nis" value="{{ old('nis') }}" required class="shadow appearance-none @error('nis') border border-red-500 mb-3 @enderror rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    @error('nis')
                         <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                     @enderror
                 </div>

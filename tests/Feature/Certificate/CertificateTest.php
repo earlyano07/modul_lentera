@@ -7,6 +7,8 @@ use App\Models\CertificateTemplate;
 use App\Models\Kelas;
 use App\Models\Konselor;
 use App\Models\Module;
+use App\Models\Question;
+use App\Models\QuestionOption;
 use App\Models\Role;
 use App\Models\School;
 use App\Models\Student;
@@ -344,5 +346,140 @@ class CertificateTest extends TestCase
         $this->assertStringContainsString('196803201994031002', $data['signer_nip']);
         $this->assertStringContainsString('LTR-CUSTOM', $data['cert_number']);
         $this->assertStringContainsString('31 Desember 2026', $data['issue_date']);
+    }
+
+    public function test_certificate_displays_student_actual_commitment_answers_from_post_5_topics_sheet(): void
+    {
+        // Setup Module 6 (Tahap Akhir Lembar Komitmen)
+        $commitModule = Module::create([
+            'urutan' => 6,
+            'judul' => 'Lembar Komitmen Siswa',
+            'status' => true,
+        ]);
+
+        $commitAssessment = Assessment::create([
+            'module_id' => $commitModule->id,
+            'judul' => 'Lembar Komitmen Siswa',
+            'jenis' => 'lembar_komitmen',
+            'urutan' => 1,
+        ]);
+
+        $qChecklist = Question::create([
+            'assessment_id' => $commitAssessment->id,
+            'question' => 'Setelah mengikuti rangkaian layanan Model LENTERA, saya berkomitmen untuk:',
+            'type' => 'checklist',
+            'urutan' => 1,
+        ]);
+
+        $opt1 = QuestionOption::create([
+            'question_id' => $qChecklist->id,
+            'label' => 'A',
+            'option' => 'Menghargai perasaan dan keberadaan orang lain',
+        ]);
+        $opt2 = QuestionOption::create([
+            'question_id' => $qChecklist->id,
+            'label' => 'B',
+            'option' => 'Tidak ikut melakukan perundungan di sekolah',
+        ]);
+
+        $qEssay = Question::create([
+            'assessment_id' => $commitAssessment->id,
+            'question' => 'Komitmen pribadi saya:',
+            'type' => 'essay',
+            'urutan' => 2,
+        ]);
+
+        // Student completes assessment with specific answers
+        StudentProgress::create([
+            'student_id' => $this->student->id,
+            'module_id' => $commitModule->id,
+            'assessment_id' => $commitAssessment->id,
+            'status' => 'selesai',
+            'answers' => [
+                (string) $qChecklist->id => [(string) $opt1->id, (string) $opt2->id],
+                (string) $qEssay->id => "Saya berjanji akan selalu peduli dan tidak membully teman.",
+            ],
+            'finished_at' => now(),
+        ]);
+
+        $service = app(\App\Services\CertificateService::class);
+        $data = $service->getCertificateData($this->student);
+
+        // Verify certificate data extracted the answers
+        $this->assertContains('Menghargai perasaan dan keberadaan orang lain', $data['student_commitment_points']);
+        $this->assertContains('Tidak ikut melakukan perundungan di sekolah', $data['student_commitment_points']);
+        $this->assertEquals('Saya berjanji akan selalu peduli dan tidak membully teman.', $data['student_commitment_text']);
+
+        // Verify printable view shows the answers
+        $response = $this->actingAs($this->counselorUser)
+            ->get(route('counselor.monitoring.student.certificate', $this->student->id));
+
+        $response->assertStatus(200);
+        $response->assertSee('Menghargai perasaan dan keberadaan orang lain');
+        $response->assertSee('Tidak ikut melakukan perundungan di sekolah');
+        $response->assertSee('Saya berjanji akan selalu peduli dan tidak membully teman.');
+    }
+
+    public function test_docx_certificate_includes_student_commitment_answers(): void
+    {
+        $commitModule = Module::create([
+            'urutan' => 6,
+            'judul' => 'Lembar Komitmen Siswa',
+            'status' => true,
+        ]);
+
+        $commitAssessment = Assessment::create([
+            'module_id' => $commitModule->id,
+            'judul' => 'Lembar Komitmen Siswa',
+            'jenis' => 'lembar_komitmen',
+            'urutan' => 1,
+        ]);
+
+        $qChecklist = Question::create([
+            'assessment_id' => $commitAssessment->id,
+            'question' => 'Setelah mengikuti rangkaian layanan Model LENTERA, saya berkomitmen untuk:',
+            'type' => 'checklist',
+            'urutan' => 1,
+        ]);
+
+        $opt = QuestionOption::create([
+            'question_id' => $qChecklist->id,
+            'label' => 'A',
+            'option' => 'Menjaga kerukunan dan saling menolong sesama teman',
+        ]);
+
+        $qEssay = Question::create([
+            'assessment_id' => $commitAssessment->id,
+            'question' => 'Komitmen pribadi saya:',
+            'type' => 'essay',
+            'urutan' => 2,
+        ]);
+
+        StudentProgress::create([
+            'student_id' => $this->student->id,
+            'module_id' => $commitModule->id,
+            'assessment_id' => $commitAssessment->id,
+            'status' => 'selesai',
+            'answers' => [
+                (string) $qChecklist->id => [(string) $opt->id],
+                (string) $qEssay->id => "Komitmen pribadi saya untuk selalu bersikap adil.",
+            ],
+            'finished_at' => now(),
+        ]);
+
+        $service = app(\App\Services\CertificateService::class);
+        $data = $service->getCertificateData($this->student);
+        $docxPath = $service->generateDocx($data, 'test_unit_commit.docx');
+
+        $this->assertFileExists($docxPath);
+
+        $zip = new \ZipArchive();
+        $this->assertTrue($zip->open($docxPath));
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+        @unlink($docxPath);
+
+        $this->assertStringContainsString('Menjaga kerukunan dan saling menolong sesama teman', $xml);
+        $this->assertStringContainsString('Komitmen pribadi saya untuk selalu bersikap adil.', $xml);
     }
 }

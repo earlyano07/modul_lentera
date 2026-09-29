@@ -6,9 +6,9 @@
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Kembali ke Detail
         </a>
-        <a href="{{ route('counselor.reports.student.pdf', $student->id) }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-emerald-700 transition-colors shadow-sm">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-            Cetak PDF
+        <a href="{{ route('counselor.reports.student.pdf', $student->id) }}?print=1" target="_blank" class="inline-flex items-center px-4 py-2.5 bg-emerald-600 border border-transparent rounded-xl text-xs sm:text-sm font-bold text-white hover:bg-emerald-700 transition-all shadow-sm gap-2">
+            <span class="material-symbols-outlined text-base">print</span>
+            Cetak / Unduh PDF (A4)
         </a>
     </div>
 
@@ -82,30 +82,90 @@
                                 <th scope="col" class="px-6 py-3 border-r border-gray-200">Nama Asesmen</th>
                                 <th scope="col" class="px-6 py-3 border-r border-gray-200">Modul</th>
                                 <th scope="col" class="px-6 py-3 border-r border-gray-200 text-center">Nilai</th>
+                                <th scope="col" class="px-6 py-3 border-r border-gray-200 text-center">Kategori</th>
                                 <th scope="col" class="px-6 py-3">Tanggal Selesai</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($assessmentResults ?? [] as $result)
-                            <tr class="bg-white border-b border-gray-200">
-                                <td class="px-6 py-4 font-medium text-gray-900 border-r border-gray-200">{{ $result->assessment->judul ?? 'Asesmen' }}</td>
-                                <td class="px-6 py-4 border-r border-gray-200">{{ $result->assessment->module->judul ?? '-' }}</td>
+                            @php
+                                $val = (float)($result->nilai ?? $result->score ?? 0);
+                                $cat = \App\Models\StudentEvaluation::getCategoryFromPercentage($val);
+                            @endphp
+                            <tr class="bg-white border-b border-gray-200 hover:bg-slate-50/60 transition-colors">
+                                <td class="px-6 py-4 font-bold text-gray-900 border-r border-gray-200">{{ $result->assessment->judul ?? 'Asesmen' }}</td>
+                                <td class="px-6 py-4 border-r border-gray-200 font-medium text-gray-600">{{ $result->assessment->module->judul ?? '-' }}</td>
                                 <td class="px-6 py-4 text-center border-r border-gray-200">
-                                    <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-md font-bold {{ ($result->score ?? 0) >= 70 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                        {{ $result->score ?? 0 }}
+                                    <span class="inline-flex items-center justify-center px-3 py-1 rounded-lg font-black text-xs {{ $val >= 75 ? 'bg-emerald-100 text-emerald-800' : ($val >= 65 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800') }}">
+                                        {{ number_format($val, 0) }}%
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">{{ \Carbon\Carbon::parse($result->created_at)->format('d/m/Y H:i') }}</td>
+                                <td class="px-6 py-4 text-center border-r border-gray-200">
+                                    <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ $cat['badge'] ?? 'bg-slate-100 text-slate-700' }}">
+                                        {{ $cat['category'] }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-600 font-medium">{{ \Carbon\Carbon::parse($result->finished_at ?? $result->created_at)->format('d/m/Y H:i') }}</td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="px-6 py-6 text-center text-gray-500">Belum ada asesmen yang diselesaikan.</td>
+                                <td colspan="5" class="px-6 py-6 text-center text-gray-500">Belum ada asesmen yang diselesaikan.</td>
                             </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            @if(isset($evaluations) && $evaluations->count() > 0)
+            <!-- Counselor Evaluation & Notes -->
+            <div class="mb-8">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 border-b border-gray-200 pb-2">Catatan & Evaluasi Konselor</h3>
+                <div class="space-y-4">
+                    @foreach($evaluations as $eval)
+                    @php
+                        $cat = $eval->category;
+                        $hasNotes = $eval->notes || $eval->self_note || $eval->commitment_note || $eval->lkpd_note;
+                    @endphp
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                            <h4 class="font-extrabold text-sm text-slate-800 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                Topik {{ $eval->module->urutan ?? 1 }}: {{ $eval->module->judul ?? 'Modul' }}
+                            </h4>
+                            @if($cat)
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {{ $cat['badge'] ?? 'bg-indigo-100 text-indigo-800' }}">
+                                Capaian: {{ $cat['category'] }} ({{ number_format($eval->percentage, 0) }}%)
+                            </span>
+                            @endif
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3 text-xs">
+                            <div class="bg-white p-3 rounded-lg border border-slate-100">
+                                <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Penilaian Diri:</span>
+                                <span class="font-bold text-slate-700">{{ $eval->self_score !== null ? $eval->self_score . ' Poin' : '-' }}</span>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-slate-100">
+                                <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Refleksi Diri:</span>
+                                <span class="font-bold text-slate-700">{{ $eval->lkpd_score !== null ? $eval->lkpd_score . ' Poin' : '-' }}</span>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-slate-100">
+                                <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Lembar Komitmen:</span>
+                                <span class="font-bold text-slate-700">{{ $eval->commitment_score !== null ? $eval->commitment_score . ' Poin' : '-' }}</span>
+                            </div>
+                        </div>
+
+                        @if($hasNotes)
+                        <div class="text-xs text-slate-700 leading-relaxed font-medium bg-white p-3.5 rounded-lg border border-slate-100">
+                            <span class="text-slate-500 block text-[10px] uppercase font-black tracking-wider mb-1">Catatan Perkembangan Konselor:</span>
+                            <p>{{ $eval->notes ?: ($eval->self_note ?: ($eval->commitment_note ?: $eval->lkpd_note)) }}</p>
+                        </div>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 </x-app-layout>

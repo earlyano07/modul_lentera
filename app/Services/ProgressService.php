@@ -96,35 +96,10 @@ class ProgressService
      */
     public function isAssessmentCompleted(Student $student, Assessment $assessment): bool
     {
-        $hasProgress = StudentProgress::where('student_id', $student->id)
+        return StudentProgress::where('student_id', $student->id)
             ->where('assessment_id', $assessment->id)
             ->where('status', 'selesai')
             ->exists();
-
-        if ($hasProgress) {
-            return true;
-        }
-
-        // Also check if StudentEvaluation has a recorded score for this assessment
-        if ($assessment->module_id) {
-            $evaluation = \App\Models\StudentEvaluation::where('student_id', $student->id)
-                ->where('module_id', $assessment->module_id)
-                ->first();
-
-            if ($evaluation) {
-                if (($assessment->jenis === 'penilaian_diri' || str_contains(strtolower($assessment->judul), 'penilaian diri')) && $evaluation->self_score !== null) {
-                    return true;
-                }
-                if (($assessment->jenis === 'lembar_komitmen' || str_contains(strtolower($assessment->judul), 'komitmen')) && $evaluation->commitment_score !== null) {
-                    return true;
-                }
-                if (($assessment->jenis === 'refleksi_diri' || $assessment->jenis === 'lkpd' || str_contains(strtolower($assessment->judul), 'refleksi') || str_contains(strtolower($assessment->judul), 'lkpd')) && $evaluation->lkpd_score !== null) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -273,6 +248,26 @@ class ProgressService
             return 0.0;
         }
 
+        // Special handling for Final Commitment Sheet (Lembar Komitmen Tahap Akhir post-5-topics)
+        $isFinalCommitment = ($assessment->module && $assessment->module->urutan >= 6)
+            || ($assessment->jenis === 'lembar_komitmen' && $questions->contains(fn($q) => $q->type === 'checklist'));
+
+        if ($isFinalCommitment) {
+            $checklistQ = $questions->firstWhere('type', 'checklist');
+            if ($checklistQ && $checklistQ->options->isNotEmpty()) {
+                $userAns = $answers[$checklistQ->id] ?? [];
+                $selectedIds = is_array($userAns) ? $userAns : (empty($userAns) ? [] : [$userAns]);
+                $totalOptions = $checklistQ->options->count();
+                $selectedCount = count(array_intersect(
+                    $checklistQ->options->pluck('id')->map(fn($id) => (string)$id)->toArray(),
+                    array_map('strval', $selectedIds)
+                ));
+
+                $pct = ($selectedCount / $totalOptions) * 100;
+                return (float) round(min(100.0, max(0.0, $pct)), 1);
+            }
+        }
+
         $totalEarned = 0.0;
         $maxPossible = 0.0;
 
@@ -294,10 +289,10 @@ class ProgressService
                 } else {
                     $correctOptions = $question->options->where('is_correct', true);
                     $correctCount = $correctOptions->count();
-                    $qMax = $question->score > 0 ? $question->score : max(1, $correctCount);
-                    $maxPossible += $qMax;
 
                     if ($correctCount > 0) {
+                        $qMax = $question->score > 0 ? $question->score : $correctCount;
+                        $maxPossible += $qMax;
                         $matchedCount = 0;
                         foreach ($selectedIds as $optId) {
                             if ($correctOptions->where('id', $optId)->isNotEmpty()) {
@@ -307,14 +302,20 @@ class ProgressService
                         $pointPerItem = $qMax / $correctCount;
                         $totalEarned += ($matchedCount * $pointPerItem);
                     } else {
-                        $totalEarned += count($selectedIds);
+                        $totalOptCount = max(1, $question->options->count());
+                        $qMax = $question->score > 0 ? $question->score : $totalOptCount;
+                        $maxPossible += $qMax;
+                        $pointPerItem = $qMax / $totalOptCount;
+                        $totalEarned += (count($selectedIds) * $pointPerItem);
                     }
                 }
             } elseif ($question->type === 'essay') {
-                $qMax = $question->score ?: 1;
-                $maxPossible += $qMax;
-                if (is_string($userAnswer) && trim($userAnswer) !== '') {
-                    $totalEarned += $qMax;
+                $qMax = $question->score > 0 ? $question->score : ($questions->count() === 1 ? 1 : 0);
+                if ($qMax > 0) {
+                    $maxPossible += $qMax;
+                    if (is_string($userAnswer) && trim($userAnswer) !== '') {
+                        $totalEarned += $qMax;
+                    }
                 }
             } else {
                 // Single choice / Likert
@@ -343,7 +344,7 @@ class ProgressService
             return 0.0;
         }
 
-        return (float) round(($totalEarned / $maxPossible) * 100, 1);
+        return (float) round(min(100.0, ($totalEarned / $maxPossible) * 100), 1);
     }
 
     /**
@@ -354,6 +355,27 @@ class ProgressService
     public function calculateRawScore(Assessment $assessment, array $answers): float
     {
         $questions = $assessment->questions()->with('options')->get();
+        if ($questions->isEmpty()) {
+            return 0.0;
+        }
+
+        // Special handling for Final Commitment Sheet
+        $isFinalCommitment = ($assessment->module && $assessment->module->urutan >= 6)
+            || ($assessment->jenis === 'lembar_komitmen' && $questions->contains(fn($q) => $q->type === 'checklist'));
+
+        if ($isFinalCommitment) {
+            $checklistQ = $questions->firstWhere('type', 'checklist');
+            if ($checklistQ) {
+                $userAns = $answers[$checklistQ->id] ?? [];
+                $selectedIds = is_array($userAns) ? $userAns : (empty($userAns) ? [] : [$userAns]);
+                $selectedCount = count(array_intersect(
+                    $checklistQ->options->pluck('id')->map(fn($id) => (string)$id)->toArray(),
+                    array_map('strval', $selectedIds)
+                ));
+                return (float) $selectedCount;
+            }
+        }
+
         $totalEarned = 0.0;
 
         foreach ($questions as $question) {
@@ -569,10 +591,64 @@ class ProgressService
     }
 
     /**
+     * Get learning topics (Modules 1 to 5).
+     */
+    public function getLearningTopics(): Collection
+    {
+        return Module::where('status', true)
+            ->whereBetween('urutan', [1, 5])
+            ->orderBy('urutan')
+            ->get();
+    }
+
+    /**
+     * Get the final commitment stage module (Module 6 / post-topics).
+     */
+    public function getFinalCommitmentModule(): ?Module
+    {
+        return Module::where('status', true)
+            ->where('urutan', '>=', 6)
+            ->orderBy('urutan')
+            ->first();
+    }
+
+    /**
+     * Check if a student has completed all 5 learning topics.
+     */
+    public function hasCompletedAllTopics(Student $student): bool
+    {
+        $topics = $this->getLearningTopics();
+        if ($topics->isEmpty()) {
+            return false;
+        }
+
+        foreach ($topics as $topic) {
+            if (!$this->isModuleCompleted($student, $topic)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if a student has completed the final commitment sheet.
+     */
+    public function hasCompletedFinalCommitment(Student $student): bool
+    {
+        $commitmentModule = $this->getFinalCommitmentModule();
+        if (!$commitmentModule) {
+            return true;
+        }
+
+        return $this->isModuleCompleted($student, $commitmentModule);
+    }
+
+    /**
      * Check if the entire program is completed.
      */
     public function isProgramCompleted(Student $student): bool
     {
-        return $this->getCurrentStage($student) === null;
+        return $this->hasCompletedAllTopics($student) && $this->hasCompletedFinalCommitment($student);
     }
 }

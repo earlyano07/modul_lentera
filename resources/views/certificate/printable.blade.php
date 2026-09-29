@@ -447,6 +447,14 @@
             background: #fef3c7;
             color: #b45309;
         }
+        .pred-kurang {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .pred-belum {
+            background: #f1f5f9;
+            color: #64748b;
+        }
 
         .disclaimer-box {
             margin-top: 8px;
@@ -520,6 +528,20 @@
             font-style: italic;
             color: #64748b;
             margin-bottom: 6px;
+        }
+        .personal-box .p-answer {
+            font-size: 11px;
+            font-weight: 700;
+            font-style: italic;
+            color: #0f172a;
+            padding: 5px 8px;
+            background: #f0fdf4;
+            border-radius: 4px;
+            border-left: 3px solid #059669;
+            line-height: 1.4;
+            margin-top: 3px;
+            white-space: pre-line;
+            word-break: break-word;
         }
         .personal-box .writing-lines {
             height: 24px;
@@ -796,8 +818,14 @@
                                             <td class="center font-semibold">{{ sprintf('%02d', $ts['urutan']) }}</td>
                                             <td>Topik {{ $ts['urutan'] }}: {{ $ts['title'] }}</td>
                                             <td class="center">
-                                                <span class="predicate-badge 
-                                                    {{ str_contains(strtolower($ts['category']), 'sangat') ? 'pred-sangat-baik' : (str_contains(strtolower($ts['category']), 'baik') ? 'pred-baik' : 'pred-cukup') }}">
+                                                @php
+                                                    $catLower = strtolower($ts['category']);
+                                                    $tsBadge = str_contains($catLower, 'sangat') ? 'pred-sangat-baik' : 
+                                                              (str_contains($catLower, 'baik') ? 'pred-baik' : 
+                                                              (str_contains($catLower, 'cukup') ? 'pred-cukup' : 
+                                                              (str_contains($catLower, 'kurang') ? 'pred-kurang' : 'pred-belum')));
+                                                @endphp
+                                                <span class="predicate-badge {{ $tsBadge }}">
                                                     {{ $ts['percentage_formatted'] }} &mdash; {{ $ts['category'] }}
                                                 </span>
                                             </td>
@@ -806,7 +834,14 @@
                                     <tr class="summary-row">
                                         <td colspan="2" style="text-align: right; padding-right: 12px;">Capaian Keseluruhan:</td>
                                         <td class="center">
-                                            <span class="predicate-badge pred-sangat-baik" style="font-size: 11px; padding: 2px 8px;">
+                                            @php
+                                                $ovLower = strtolower($overall_category ?? '');
+                                                $ovBadge = str_contains($ovLower, 'sangat') ? 'pred-sangat-baik' : 
+                                                          (str_contains($ovLower, 'baik') ? 'pred-baik' : 
+                                                          (str_contains($ovLower, 'cukup') ? 'pred-cukup' : 
+                                                          (str_contains($ovLower, 'kurang') ? 'pred-kurang' : 'pred-belum')));
+                                            @endphp
+                                            <span class="predicate-badge {{ $ovBadge }}" style="font-size: 11px; padding: 2px 8px;">
                                                 {{ $overall_label }}
                                             </span>
                                         </td>
@@ -828,7 +863,10 @@
                                 <div class="commitment-intro">{{ $template->commitment_intro }}</div>
                                 
                                 <ul class="commitment-list">
-                                    @foreach($template->commitment_points as $pt)
+                                    @php
+                                        $displayPoints = !empty($student_commitment_points) ? $student_commitment_points : ($template->commitment_points ?? []);
+                                    @endphp
+                                    @foreach($displayPoints as $pt)
                                         <li>
                                             <span class="chk">✓</span>
                                             <span>{{ $pt }}</span>
@@ -839,8 +877,14 @@
 
                             <div class="personal-box">
                                 <div class="p-label">{{ $template->commitment_personal_prompt ?? 'Komitmen pribadi saya:' }}</div>
-                                <div class="p-prompt">{{ $template->commitment_personal_subprompt ?? '“Mulai sekarang, saya akan...”' }}</div>
-                                <div class="writing-lines"></div>
+                                @if(!empty($student_commitment_text))
+                                    <div class="p-answer">
+                                        “{!! nl2br(e($student_commitment_text)) !!}”
+                                    </div>
+                                @else
+                                    <div class="p-prompt">{{ $template->commitment_personal_subprompt ?? '“Mulai sekarang, saya akan...”' }}</div>
+                                    <div class="writing-lines"></div>
+                                @endif
                             </div>
                         </div>
                     </div>

@@ -71,8 +71,8 @@
             @endif
         </div>
 
-        <!-- Topic Navigation Cards (5 Topik in 5 Columns) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+        <!-- Topic Navigation Cards (Topik 1 - 5 + Lembar Komitmen Akhir) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
             @foreach($modules as $modIndex => $mod)
                 @php
                     $stageAssessments = $mod->assessments;
@@ -89,12 +89,12 @@
                 @endphp
                 <div @click="activeTab = 'topics'; selectedTopicIdx = {{ $modIndex }}"
                      class="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 border cursor-pointer select-none"
-                     :class="selectedTopicIdx === {{ $modIndex }} ? 'bg-indigo-600 text-white shadow-md border-indigo-600 ring-2 ring-indigo-600/30' : 'bg-white text-slate-800 shadow-2xs border-slate-200/80 hover:border-indigo-300 hover:bg-slate-50'">
+                     :class="activeTab === 'topics' && selectedTopicIdx === {{ $modIndex }} ? 'bg-indigo-600 text-white shadow-md border-indigo-600 ring-2 ring-indigo-600/30' : 'bg-white text-slate-800 shadow-2xs border-slate-200/80 hover:border-indigo-300 hover:bg-slate-50'">
                     
                     <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                         :class="selectedTopicIdx === {{ $modIndex }} ? 'bg-white/20 text-white' : '{{ $isModCompleted ? 'bg-emerald-50 text-emerald-600' : ($isModStarted ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400') }}'">
+                         :class="activeTab === 'topics' && selectedTopicIdx === {{ $modIndex }} ? 'bg-white/20 text-white' : '{{ $isModCompleted ? 'bg-emerald-50 text-emerald-600' : ($isModStarted ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400') }}'">
                         <span class="material-symbols-outlined text-xl"
-                            :style="selectedTopicIdx === {{ $modIndex }} ? 'font-variation-settings: \'FILL\' 1;' : ''">
+                            :style="activeTab === 'topics' && selectedTopicIdx === {{ $modIndex }} ? 'font-variation-settings: \'FILL\' 1;' : ''">
                             @if($mod->urutan == 1) psychology
                             @elseif($mod->urutan == 2) favorite
                             @elseif($mod->urutan == 3) all_inclusive
@@ -107,19 +107,19 @@
                     <div class="text-left overflow-hidden flex-1">
                         <div class="flex items-center justify-between gap-1">
                             <p class="text-[10px] font-black uppercase tracking-wider"
-                               :class="selectedTopicIdx === {{ $modIndex }} ? 'text-indigo-200' : 'text-slate-400'">
+                               :class="activeTab === 'topics' && selectedTopicIdx === {{ $modIndex }} ? 'text-indigo-200' : 'text-slate-400'">
                                 TOPIK {{ $mod->urutan }}
                             </p>
                             @if($isModCompleted)
-                                <span class="material-symbols-outlined text-sm" :class="selectedTopicIdx === {{ $modIndex }} ? 'text-emerald-200' : 'text-emerald-500'" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                <span class="material-symbols-outlined text-sm" :class="activeTab === 'topics' && selectedTopicIdx === {{ $modIndex }} ? 'text-emerald-200' : 'text-emerald-500'" style="font-variation-settings: 'FILL' 1;">check_circle</span>
                             @endif
                         </div>
                         <p class="text-xs font-black truncate"
-                           :class="selectedTopicIdx === {{ $modIndex }} ? 'text-white' : 'text-slate-800'">
+                           :class="activeTab === 'topics' && selectedTopicIdx === {{ $modIndex }} ? 'text-white' : 'text-slate-800'">
                             {{ $mod->judul }}
                         </p>
                         <p class="text-[10px] font-semibold mt-0.5 truncate"
-                           :class="selectedTopicIdx === {{ $modIndex }} ? 'text-indigo-100' : 'text-slate-400'">
+                           :class="activeTab === 'topics' && selectedTopicIdx === {{ $modIndex }} ? 'text-indigo-100' : 'text-slate-400'">
                             @if($isModCompleted) Selesai ({{ $completedAss }}/{{ $totalAss }})
                             @elseif($isModStarted) Berjalan ({{ $completedAss }}/{{ $totalAss }})
                             @else Belum Mulai
@@ -128,6 +128,48 @@
                     </div>
                 </div>
             @endforeach
+
+            @if(isset($finalCommitmentModule))
+                @php
+                    $fcAssessment = $finalCommitmentModule->assessments->first();
+                    $fcProg = $fcAssessment ? ($progressList[$fcAssessment->id] ?? null) : null;
+                    $isFcCompleted = $fcProg && $fcProg->status === 'selesai';
+                @endphp
+                <div @click="activeTab = 'commitment'"
+                     class="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 border cursor-pointer select-none"
+                     :class="activeTab === 'commitment' ? 'bg-amber-600 text-white shadow-md border-amber-600 ring-2 ring-amber-600/30' : 'bg-white text-slate-800 shadow-2xs border-slate-200/80 hover:border-amber-300 hover:bg-slate-50'">
+                    
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                         :class="activeTab === 'commitment' ? 'bg-white/20 text-white' : '{{ $isFcCompleted ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}'">
+                        <span class="material-symbols-outlined text-xl"
+                            :style="activeTab === 'commitment' ? 'font-variation-settings: \'FILL\' 1;' : ''">
+                            handshake
+                        </span>
+                    </div>
+
+                    <div class="text-left overflow-hidden flex-1">
+                        <div class="flex items-center justify-between gap-1">
+                            <p class="text-[10px] font-black uppercase tracking-wider"
+                               :class="activeTab === 'commitment' ? 'text-amber-200' : 'text-slate-400'">
+                                TAHAP AKHIR
+                            </p>
+                            @if($isFcCompleted)
+                                <span class="material-symbols-outlined text-sm" :class="activeTab === 'commitment' ? 'text-emerald-200' : 'text-emerald-500'" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            @endif
+                        </div>
+                        <p class="text-xs font-black truncate"
+                           :class="activeTab === 'commitment' ? 'text-white' : 'text-slate-800'">
+                            {{ $finalCommitmentModule->judul }}
+                        </p>
+                        <p class="text-[10px] font-semibold mt-0.5 truncate"
+                           :class="activeTab === 'commitment' ? 'text-amber-100' : 'text-slate-400'">
+                            @if($isFcCompleted) Selesai
+                            @else Belum Diisi
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Main Content 2-Column Grid -->
@@ -302,6 +344,22 @@
                         <span class="material-symbols-outlined text-base">auto_stories</span>
                         Instrumen Topik 1 - 5
                     </button>
+                    @if(isset($finalCommitmentModule))
+                        @php
+                            $fcAssessment = $finalCommitmentModule->assessments->first();
+                            $fcProg = $fcAssessment ? ($progressList[$fcAssessment->id] ?? null) : null;
+                            $isFcCompleted = $fcProg && $fcProg->status === 'selesai';
+                        @endphp
+                        <button type="button" @click="activeTab = 'commitment'" 
+                                class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-xs transition duration-200 cursor-pointer"
+                                :class="activeTab === 'commitment' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-50'">
+                            <span class="material-symbols-outlined text-base">handshake</span>
+                            Lembar Komitmen Siswa
+                            @if($isFcCompleted)
+                                <span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-emerald-400"></span>
+                            @endif
+                        </button>
+                    @endif
                     <button type="button" @click="activeTab = 'timeline'" 
                             class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-xs transition duration-200 cursor-pointer"
                             :class="activeTab === 'timeline' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-50'">
@@ -807,6 +865,140 @@
                         </div>
                     @endforeach
                 </div>
+
+                <!-- TAB: Lembar Komitmen Siswa (Tahap Akhir Pasca 5 Topik) -->
+                @if(isset($finalCommitmentModule))
+                    @php
+                        $fcAssessment = $finalCommitmentModule->assessments->first();
+                        $fcProg = $fcAssessment ? ($progressList[$fcAssessment->id] ?? null) : null;
+                        $isFcCompleted = $fcProg && $fcProg->status === 'selesai';
+                    @endphp
+                    <div x-show="activeTab === 'commitment'" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
+                        
+                        <!-- Header -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="px-2.5 py-0.5 bg-amber-50 text-amber-800 font-black text-[10px] rounded-md uppercase tracking-wider border border-amber-200">
+                                        Tahap Akhir Layanan Model LENTERA
+                                    </span>
+                                    @if($isFcCompleted)
+                                        <span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 font-bold text-[10px] rounded-md border border-emerald-200 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">check_circle</span> Lembar Komitmen Selesai
+                                        </span>
+                                    @else
+                                        <span class="px-2.5 py-0.5 bg-slate-100 text-slate-500 font-bold text-[10px] rounded-md border border-slate-200">
+                                            Belum Diisi Siswa
+                                        </span>
+                                    @endif
+                                </div>
+                                <h2 class="text-xl sm:text-2xl font-black text-slate-900">{{ $finalCommitmentModule->judul }}</h2>
+                                <p class="text-xs text-slate-500 font-semibold mt-0.5">Komitmen penerapan empati & anti-perundungan yang dicantumkan pada halaman belakang sertifikat.</p>
+                            </div>
+
+                            @if($isFcCompleted)
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('counselor.monitoring.student.certificate', $student->id) }}" target="_blank"
+                                       class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition shadow-xs">
+                                        <span class="material-symbols-outlined text-sm">workspace_premium</span>
+                                        Lihat di Sertifikat
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+
+                        @if($isFcCompleted && !empty($fcProg->answers))
+                            @if($fcProg->finished_at)
+                                <div class="flex items-center justify-between p-3.5 bg-amber-50/80 rounded-2xl border border-amber-200/60 text-xs">
+                                    <span class="text-amber-900 font-bold flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-base text-amber-700">schedule</span>
+                                        Waktu Penyelesaian Komitmen:
+                                    </span>
+                                    <span class="font-black text-slate-800">
+                                        {{ $fcProg->finished_at->format('d M Y, H:i') }} WIB
+                                    </span>
+                                </div>
+                            @endif
+
+                            @if($fcAssessment && $fcAssessment->questions->isNotEmpty())
+                                <div class="space-y-5">
+                                    @foreach($fcAssessment->questions as $q)
+                                        @php
+                                            $ans = $fcProg->answers[$q->id] ?? null;
+                                        @endphp
+                                        <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-4 sm:p-5 space-y-3">
+                                            <div class="flex items-start gap-2">
+                                                <span class="w-6 h-6 rounded-lg bg-amber-600 text-white flex items-center justify-center text-xs font-black shrink-0 mt-0.5">
+                                                    {{ $loop->iteration }}
+                                                </span>
+                                                <h4 class="font-extrabold text-xs sm:text-sm text-slate-900 leading-snug">
+                                                    {{ $q->question }}
+                                                </h4>
+                                            </div>
+
+                                            @if($q->type === 'checklist')
+                                                <div class="space-y-2 pt-1 pl-1 sm:pl-8">
+                                                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Butir Komitmen yang Disepakati Siswa:</p>
+                                                    @foreach($q->options as $opt)
+                                                        @php
+                                                            $isSelected = is_array($ans) ? in_array((string) $opt->id, array_map('strval', $ans)) : ($ans == $opt->id);
+                                                        @endphp
+                                                        <div class="p-3 rounded-xl border transition-all flex items-start gap-3 {{ $isSelected ? 'bg-emerald-50/90 border-emerald-300 text-emerald-950 font-bold shadow-2xs' : 'bg-white border-slate-200/70 text-slate-400 font-medium opacity-60' }}">
+                                                            <span class="inline-flex items-center justify-center w-5 h-5 rounded-md shrink-0 mt-0.5 text-xs font-black {{ $isSelected ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-300' }}">
+                                                                {{ $isSelected ? '✓' : '' }}
+                                                            </span>
+                                                            <div class="flex-1 text-xs leading-relaxed">
+                                                                <span class="{{ $isSelected ? 'text-slate-900 font-extrabold' : 'text-slate-400' }}">
+                                                                    {{ $opt->option }}
+                                                                </span>
+                                                            </div>
+                                                            @if($isSelected)
+                                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white shrink-0">
+                                                                    Disepakati Siswa
+                                                                </span>
+                                                            @else
+                                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-400 shrink-0">
+                                                                    Tidak Dipilih
+                                                                </span>
+                                                            @endif
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @elseif($q->type === 'essay')
+                                                <div class="pt-1 pl-1 sm:pl-8">
+                                                    <div class="p-4 bg-amber-50/90 rounded-2xl border border-amber-200 shadow-2xs space-y-1.5">
+                                                        <div class="flex items-center gap-1.5 text-amber-900 font-extrabold text-xs">
+                                                            <span class="material-symbols-outlined text-base text-amber-700">edit_note</span>
+                                                            <span>Pernyataan / Ikrar Komitmen Pribadi Siswa:</span>
+                                                        </div>
+                                                        <div class="p-3.5 bg-white rounded-xl border border-amber-200/60 text-xs sm:text-sm text-slate-800 font-medium leading-relaxed whitespace-pre-wrap">
+                                                            {{ $ans ?: '(Siswa belum menuliskan komitmen pribadi)' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        @else
+                            <div class="py-12 px-6 rounded-2xl bg-amber-50/40 border border-amber-200/60 text-center space-y-3">
+                                <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+                                    <span class="material-symbols-outlined text-2xl">pending_actions</span>
+                                </div>
+                                <h3 class="text-sm font-black text-slate-800">Siswa Belum Mengisi Lembar Komitmen</h3>
+                                <p class="text-xs text-slate-500 font-medium max-w-md mx-auto">
+                                    Lembar komitmen ini merupakan tahap akhir setelah siswa menyelesaikan Topik 1 s.d. 5. Jawaban komitmen siswa akan otomatis disinkronkan ke halaman belakang sertifikat.
+                                </p>
+                            </div>
+                        @endif
+
+                    </div>
+                @endif
 
                 <!-- TAB 2: Activity Timeline -->
                 <div x-show="activeTab === 'timeline'" class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">

@@ -51,7 +51,7 @@
             </div>
 
             <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {{-- <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Line Chart Card -->
                 <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/30">
                     <div class="flex justify-between items-center mb-6">
@@ -137,7 +137,7 @@
                         <span class="text-xs text-on-surface-variant">Kasus Terdeteksi</span>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- Sekolah Binaan Section -->
             <div>

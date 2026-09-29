@@ -263,6 +263,7 @@
             background-color: #f8fafc;
         }
     </style>
+    @stack('styles')
 </head>
 
 <body class="bg-surface text-on-background antialiased">
@@ -329,16 +330,23 @@
                     </button>
                     <div class="h-8 w-[1px] bg-outline-variant"></div>
                     <div class="flex items-center gap-3">
-                        <div class="text-right hidden sm:block">
-                            <p class="font-label-md text-label-md text-on-surface leading-tight">
+                        @php
+                            $profileRoute = match(auth()->user()->role_id ?? 0) {
+                                \App\Models\Role::KONSELOR => route('counselor.profile.edit'),
+                                \App\Models\Role::SISWA => route('student.profile.edit'),
+                                default => route('profile.edit'),
+                            };
+                        @endphp
+                        <a href="{{ $profileRoute }}" class="text-right hidden sm:block hover:opacity-80 transition group" title="Buka Pengaturan Profil">
+                            <p class="font-label-md text-label-md text-on-surface leading-tight group-hover:text-primary transition-colors">
                                 {{ auth()->user()->nama ?? 'User' }}</p>
                             <p class="text-[10px] text-on-surface-variant font-medium">
                                 {{ auth()->user()->getRoleName() }}</p>
-                        </div>
-                        <div class="w-10 h-10 rounded-full bg-primary-container text-white flex items-center justify-center font-bold border-2 border-primary-container/20 shadow-sm"
-                            title="{{ auth()->user()->nama }}">
-                            {{ substr(auth()->user()->nama ?? 'U', 0, 1) }}
-                        </div>
+                        </a>
+                        <a href="{{ $profileRoute }}" class="w-10 h-10 rounded-full bg-primary-container text-white flex items-center justify-center font-bold border-2 border-primary-container/20 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                            title="Buka Profil {{ auth()->user()->nama }}">
+                            {{ strtoupper(substr(auth()->user()->nama ?? 'U', 0, 1)) }}
+                        </a>
                         <form method="POST" action="{{ route('logout') }}" class="flex items-center">
                             @csrf
                             <button type="submit"

@@ -288,6 +288,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CertificateTemplateSeeder::class,
             Topik1AssessmentSeeder::class,
+            FinalCommitmentSeeder::class,
         ]);
     }
 }

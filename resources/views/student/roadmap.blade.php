@@ -18,7 +18,7 @@
         </div>
     </div>
 
-    @if(($progressPercentage ?? 0) >= 100)
+    @if($isProgramCompleted)
         <!-- Certificate Ready Banner -->
         <div class="mb-8 p-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-4">
@@ -27,7 +27,7 @@
                 </div>
                 <div>
                     <h3 class="text-xl font-bold">Selamat! Anda Telah Menyelesaikan Layanan Model LENTERA</h3>
-                    <p class="text-emerald-100 text-xs sm:text-sm mt-1">Seluruh topik dan instrumen asesmen telah tuntas. Sertifikat resmi dan lembar komitmen Anda sudah siap dicetak atau disimpan.</p>
+                    <p class="text-emerald-100 text-xs sm:text-sm mt-1">Seluruh 5 topik dan lembar komitmen siswa telah tuntas. Sertifikat resmi bimbingan empati Anda sudah siap dicetak atau diunduh.</p>
                 </div>
             </div>
             <div class="shrink-0 flex items-center gap-2">
@@ -133,4 +133,76 @@
             </div>
         @endforeach
     </div>
+
+    @if(isset($finalCommitmentModule))
+        <!-- Tahap Akhir: Lembar Komitmen Siswa -->
+        <div class="mt-10">
+            <h2 class="text-lg font-extrabold text-slate-800 mb-5 flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-600 text-xl">handshake</span>
+                Tahap Akhir: Lembar Komitmen Siswa
+            </h2>
+
+            <div class="bg-white rounded-3xl shadow-xs border border-slate-200/80 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden transition-all duration-300 {{ $canAccessCommitment ? 'hover:shadow-md hover:border-amber-300 group ring-1 ring-amber-400/20' : 'opacity-75 bg-slate-50/70' }}">
+                <!-- Border Accent -->
+                <div class="absolute top-0 left-0 w-2 h-full {{ $hasCompletedFinalCommitment ? 'bg-emerald-500' : ($canAccessCommitment ? 'bg-amber-500' : 'bg-slate-300') }}"></div>
+
+                <div class="flex-grow pl-3">
+                    <div class="flex items-center gap-2.5 mb-2 flex-wrap">
+                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider {{ $hasCompletedFinalCommitment ? 'bg-emerald-100 text-emerald-800' : ($canAccessCommitment ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500') }}">
+                            Tahap Akhir Layanan
+                        </span>
+                        @if($hasCompletedFinalCommitment)
+                            <span class="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                                <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Lembar Komitmen Selesai & Tercatat di Sertifikat
+                            </span>
+                        @elseif($canAccessCommitment)
+                            <span class="inline-flex items-center gap-1 text-[10px] font-extrabold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
+                                <span class="material-symbols-outlined text-[12px]">assignment_turned_in</span>
+                                Tersedia — Silakan Isi Komitmen Anda
+                            </span>
+                        @else
+                            <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-0.5">
+                                <span class="material-symbols-outlined text-[12px]">lock</span> Terkunci (Selesaikan Topik 1 - 5 Terlebih Dahulu)
+                            </span>
+                        @endif
+                    </div>
+
+                    <a href="{{ $canAccessCommitment ? route('student.module', $finalCommitmentModule->id) : '#' }}" class="block">
+                        <h3 class="text-lg sm:text-xl font-black text-slate-900 leading-tight {{ $canAccessCommitment ? 'group-hover:text-amber-600 transition-colors' : '' }}">
+                            {{ $finalCommitmentModule->judul }}
+                        </h3>
+                    </a>
+                    <p class="text-xs text-slate-500 font-bold mt-1">({{ $finalCommitmentModule->subtitle ?? 'Tahap Akhir Layanan Model LENTERA' }})</p>
+                    <p class="text-xs text-slate-600 font-medium mt-2 leading-relaxed max-w-2xl">
+                        {{ $finalCommitmentModule->deskripsi ?? 'Setelah menyelesaikan seluruh materi dan asesmen pada 5 topik pembelajaran bimbingan empati, nyatakan komitmen diri Anda untuk mewujudkan lingkungan yang saling menghargai dan bebas dari perundungan.' }}
+                    </p>
+                    
+                    <div class="flex items-center gap-2 mt-3 flex-wrap">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 text-[10px] font-black border border-amber-200">
+                            <span class="material-symbols-outlined text-[12px]">verified</span> Komitmen Anti-Perundungan & Empati
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-800 text-[10px] font-black border border-purple-200">
+                            <span class="material-symbols-outlined text-[12px]">workspace_premium</span> Ditampilkan di Halaman Belakang Sertifikat
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="shrink-0 self-stretch sm:self-auto flex items-center">
+                    @if($canAccessCommitment)
+                        <a href="{{ route('student.module', $finalCommitmentModule->id) }}" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 {{ $hasCompletedFinalCommitment ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-600 hover:bg-amber-700' }} text-white font-black rounded-xl text-xs sm:text-sm transition shadow-md hover:shadow-lg gap-2 cursor-pointer">
+                            <span>{{ $hasCompletedFinalCommitment ? 'Lihat Komitmen' : 'Isi Lembar Komitmen' }}</span>
+                            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        </a>
+                    @else
+                        <button disabled class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 bg-slate-100 text-slate-400 border border-slate-200 font-bold rounded-xl text-xs cursor-not-allowed gap-1.5">
+                            <span class="material-symbols-outlined text-[16px]">lock</span>
+                            Terkunci
+                        </button>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
 </x-app-layout>

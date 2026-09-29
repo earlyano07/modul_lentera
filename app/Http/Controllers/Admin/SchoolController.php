@@ -43,7 +43,12 @@ class SchoolController extends Controller
 
     public function show(School $school)
     {
-        $school->load(['kelas.students', 'konselors.user']);
+        $school->load([
+            'kelas' => function ($q) {
+                $q->withCount('students');
+            },
+            'konselors.user'
+        ]);
         return view('admin.schools.show', compact('school'));
     }
 
@@ -67,6 +72,11 @@ class SchoolController extends Controller
         }
         $validated['status'] = $request->has('status');
         $school->update($validated);
+
+        if ($request->filled('_redirect_to')) {
+            return redirect($request->input('_redirect_to'))->with('success', 'Sekolah berhasil diperbarui.');
+        }
+
         return redirect()->route('admin.schools.index')->with('success', 'Sekolah berhasil diperbarui.');
     }
 

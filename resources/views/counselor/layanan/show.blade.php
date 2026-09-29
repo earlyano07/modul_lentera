@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="title">Modul Intervensi Empati - {{ $module->judul }}</x-slot>
 
-    <div x-data="{ step: 1 }" class="max-w-7xl mx-auto">
+    <div x-data="{ step: 1 }" class="w-full">
         <!-- Breadcrumb & Header -->
         <div class="mb-8">
             <a href="{{ route('counselor.layanan') }}" class="flex items-center gap-2 text-primary hover:underline font-semibold text-sm mb-2">
@@ -103,7 +103,7 @@
         <!-- Outer dynamic grid layout -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <!-- Left Column: Main Content Area card -->
-            <div :class="(step === 1) ? 'lg:col-span-2' : 'lg:col-span-3'">
+            <div :class="(step === 1 || step === 2) ? 'lg:col-span-2' : 'lg:col-span-3'">
                 <div class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-outline-variant/30 min-h-[400px] flex flex-col justify-between">
                     <div>
                         <!-- TAHAP 1: MODELING -->
@@ -171,20 +171,6 @@
                                     </div>
                                 @endif
                             </div>
-
-                            @if($module->guide_role_playing)
-                                <div class="bg-indigo-50/70 border border-indigo-150 rounded-2xl p-5 shadow-xs flex items-start gap-4">
-                                    <div class="flex-grow">
-                                        <h4 class="text-xs font-black text-indigo-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                            <span>📖 Panduan Bimbingan Konselor</span>
-                                            <span class="px-1.5 py-0.5 bg-indigo-100 text-indigo-850 text-[9px] font-black rounded uppercase">Tahap 2</span>
-                                        </h4>
-                                        <div class="text-xs text-indigo-950/80 leading-relaxed font-semibold prose prose-sm max-w-none counselor-steps-rendered">
-                                            {!! $module->guide_role_playing !!}
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
 
                             @if($kartuList->count() > 0)
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center w-full">
@@ -363,19 +349,38 @@
             </div>
 
             <!-- Right Column: Sidebar Standalone Counselor Guide -->
-            <div x-show="step === 1" class="lg:col-span-1 space-y-6">
+            <div x-show="step === 1 || step === 2" class="lg:col-span-1 space-y-6">
                 <!-- TAHAP 1: MODELING GUIDE -->
-                <div>
+                <div x-show="step === 1" x-transition>
                     @if($module->guide_modeling)
-                        <div class="bg-indigo-50/70 border border-indigo-150 rounded-2xl p-5 shadow-xs sticky top-6">
+                        <div class="bg-indigo-50/70 border border-indigo-150 rounded-2xl p-5 shadow-xs sticky top-6 max-h-[85vh] overflow-y-auto">
                             <div class="flex items-start gap-3">
                                 <div class="flex-grow">
                                     <h4 class="text-xs font-black text-indigo-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                                         <span>📖 Panduan Konselor</span>
-                                        <span class="px-1.5 py-0.5 bg-indigo-100 text-indigo-805 text-[9px] font-black rounded uppercase">Tahap 1</span>
+                                        <span class="px-1.5 py-0.5 bg-indigo-100 text-indigo-800 text-[9px] font-black rounded uppercase">Tahap 1</span>
                                     </h4>
                                     <div class="text-xs text-indigo-950/80 leading-relaxed font-semibold prose prose-sm max-w-none counselor-steps-rendered">
                                         {!! $module->guide_modeling !!}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- TAHAP 2: ROLE PLAYING GUIDE -->
+                <div x-show="step === 2" x-transition>
+                    @if($module->guide_role_playing)
+                        <div class="bg-indigo-50/70 border border-indigo-150 rounded-2xl p-5 shadow-xs sticky top-6 max-h-[85vh] overflow-y-auto">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-grow">
+                                    <h4 class="text-xs font-black text-indigo-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                        <span>📖 Panduan Bimbingan Konselor</span>
+                                        <span class="px-1.5 py-0.5 bg-indigo-100 text-indigo-800 text-[9px] font-black rounded uppercase">Tahap 2</span>
+                                    </h4>
+                                    <div class="text-xs text-indigo-950/80 leading-relaxed font-semibold prose prose-sm max-w-none counselor-steps-rendered">
+                                        {!! $module->guide_role_playing !!}
                                     </div>
                                 </div>
                             </div>

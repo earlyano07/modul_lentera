@@ -59,15 +59,21 @@
         <!-- Main Body -->
         <main class="flex-1 p-4 sm:p-6 flex justify-center items-start">
             @php
-                $firstQuestion = $assessment->questions->first();
                 $hasQuestions = $assessment->questions->count() > 0;
                 
-                // Check if questions are uniform scale/Likert statements (e.g. SS, S, KS, TS)
-                $isAllSingleChoice = $hasQuestions && $assessment->questions->every(fn($q) => in_array($q->type, ['single_choice', 'multiple_choice', '']) && $q->options->count() >= 2);
-                $firstLabels = $firstQuestion?->options->pluck('label')->toArray() ?? [];
-                $isUniformScale = $isAllSingleChoice && $assessment->questions->every(function($q) use ($firstLabels) {
-                    return $q->options->pluck('label')->toArray() === $firstLabels;
-                });
+                // Separate scale (Likert) questions, essay questions, and checklist questions
+                $scaleQuestions = $assessment->questions->filter(fn($q) => in_array($q->type, ['single_choice', 'multiple_choice', '']) && $q->options->count() >= 2)->values();
+                $essayQuestions = $assessment->questions->filter(fn($q) => $q->type === 'essay')->values();
+                $checklistQuestions = $assessment->questions->filter(fn($q) => $q->type === 'checklist')->values();
+                
+                $firstScale = $scaleQuestions->first();
+                $firstLabels = $firstScale?->options->pluck('label')->toArray() ?? [];
+                
+                // Uniform scale if at least 2 scale questions exist, all have matching labels, and no checklist questions
+                $isUniformScale = $scaleQuestions->count() >= 2 
+                    && $checklistQuestions->isEmpty()
+                    && ($scaleQuestions->count() + $essayQuestions->count() === $assessment->questions->count())
+                    && $scaleQuestions->every(fn($q) => $q->options->pluck('label')->toArray() === $firstLabels);
             @endphp
 
             @if($isUniformScale)
@@ -123,7 +129,7 @@
                                         <tr class="bg-slate-100 border-b-2 border-slate-300 text-slate-800 text-xs font-black uppercase">
                                             <th class="py-3.5 px-3 text-center w-12 border-r border-slate-300">No</th>
                                             <th class="py-3.5 px-5 border-r border-slate-300">Pernyataan</th>
-                                            @foreach($firstQuestion->options as $opt)
+                                            @foreach($firstScale->options as $opt)
                                                 <th class="py-3.5 px-2 text-center w-16 sm:w-20 border-r border-slate-300 last:border-r-0" title="{{ $opt->option }}">
                                                     <span class="text-sm font-black">{{ $opt->label }}</span>
                                                 </th>
@@ -131,7 +137,7 @@
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-300 text-xs sm:text-sm">
-                                        @foreach($assessment->questions as $index => $question)
+                                        @foreach($scaleQuestions as $index => $question)
                                             <tr class="hover:bg-indigo-50/20 transition-colors {{ $loop->odd ? 'bg-white' : 'bg-slate-50/40' }}">
                                                 <td class="py-4 px-3 text-center font-black text-slate-600 border-r border-slate-300 align-middle">
                                                     {{ $loop->iteration }}
@@ -165,7 +171,7 @@
                             <div class="p-4 bg-slate-50 border-t border-slate-300 text-xs font-bold text-slate-700">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="text-slate-500 font-extrabold text-[11px]">Keterangan:</span>
-                                    @foreach($firstQuestion->options as $opt)
+                                    @foreach($firstScale->options as $opt)
                                         <span class="inline-flex items-center gap-1 bg-white px-2.5 py-1 rounded-md border border-slate-200 shadow-2xs">
                                             <strong class="text-slate-900 font-black">{{ $opt->label }}</strong> = {{ $opt->option }}
                                         </span>
@@ -184,6 +190,39 @@
                                 </div>
                             @endif
                         </div>
+
+                        <!-- Soal Esai / Komitmen Tambahan (Jika Ada) -->
+                        @if($essayQuestions->isNotEmpty())
+                            <div class="space-y-4 mb-5">
+                                @foreach($essayQuestions as $eIndex => $eQuestion)
+                                    <div class="bg-white rounded-2xl shadow-sm border border-slate-300 p-5 sm:p-6">
+                                        <div class="flex items-start gap-3 mb-3">
+                                            <div class="shrink-0 w-8 h-8 bg-indigo-50 text-indigo-700 rounded-lg flex items-center justify-center font-black text-sm border border-indigo-100">
+                                                {{ $scaleQuestions->count() + $eIndex + 1 }}
+                                            </div>
+                                            <div class="flex-1 pt-1">
+                                                <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">
+                                                    {{ $eQuestion->question }}
+                                                </h3>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl flex items-center gap-2 text-xs text-indigo-800 font-semibold mb-3">
+                                            <span class="material-symbols-outlined text-indigo-600 text-base shrink-0">edit_note</span>
+                                            <span>Tuliskan komitmen atau uraian Anda secara lengkap pada kolom di bawah:</span>
+                                        </div>
+
+                                        <div>
+                                            <textarea name="answers[{{ $eQuestion->id }}]" 
+                                                      rows="4" 
+                                                      required 
+                                                      placeholder="Tuliskan komitmen Anda di sini..." 
+                                                      class="w-full text-xs sm:text-sm font-medium p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:bg-white transition leading-relaxed"></textarea>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
 
                         <!-- Footer Submit Button -->
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">

@@ -16,30 +16,34 @@ class LearningController extends Controller
         $student = auth()->user()->student;
         if (!$student) { abort(404, 'Data siswa tidak ditemukan.'); }
         
-        $topiks = \App\Models\Module::where('urutan', '>=', 1)
-            ->where('urutan', '<=', 5)
+        $topiks = Module::where('status', true)
+            ->whereBetween('urutan', [1, 5])
             ->orderBy('urutan')
             ->with(['assessments.questions'])
             ->get();
             
-        // Determine if they completed all 5 topic LKPDs
-        $completedAllLkpd = true;
-        foreach ($topiks as $t) {
-            $stageAssessments = $t->assessments;
-            foreach ($stageAssessments as $ass) {
-                if (!$this->progressService->isAssessmentCompleted($student, $ass)) {
-                    $completedAllLkpd = false;
-                    break 2;
-                }
-            }
+        $hasCompletedAllTopics = $this->progressService->hasCompletedAllTopics($student);
+
+        // Final Commitment Module (Tahap Akhir Pasca 5 Topik)
+        $finalCommitmentModule = $this->progressService->getFinalCommitmentModule();
+        if ($finalCommitmentModule) {
+            $finalCommitmentModule->load(['assessments.questions']);
         }
+        
+        $hasCompletedFinalCommitment = $this->progressService->hasCompletedFinalCommitment($student);
+        $canAccessCommitment = $hasCompletedAllTopics && $finalCommitmentModule ? $this->progressService->canAccessModule($student, $finalCommitmentModule) : false;
+        $isProgramCompleted = $this->progressService->isProgramCompleted($student);
         
         $progressPercentage = $this->progressService->getProgressPercentage($student);
         
         return view('student.roadmap', compact(
             'student', 
             'topiks', 
-            'completedAllLkpd', 
+            'hasCompletedAllTopics',
+            'finalCommitmentModule',
+            'hasCompletedFinalCommitment',
+            'canAccessCommitment',
+            'isProgramCompleted',
             'progressPercentage'
         ));
     }

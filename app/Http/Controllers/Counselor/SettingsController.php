@@ -8,6 +8,6 @@ class SettingsController extends Controller
 {
     public function index()
     {
-        return view('counselor.settings.index');
+        return redirect()->route('counselor.profile.edit');
     }
 }

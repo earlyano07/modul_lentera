@@ -24,84 +24,12 @@
                 </svg>
 
                 <div class="my-auto space-y-6 w-full">
-                    <!-- Lantern Logo SVG (High Quality Render) -->
+                    <!-- Logo Lentera -->
                     <div class="relative flex justify-center">
-                        <svg viewBox="0 0 300 350" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-44 h-48 sm:w-48 sm:h-52 drop-shadow-[0_0_15px_rgba(253,224,71,0.3)]">
-                            <defs>
-                                <radialGradient id="glow" cx="50%" cy="45%" r="50%" fx="50%" fy="45%">
-                                    <stop offset="0%" stop-color="#fff5cc" stop-opacity="1" />
-                                    <stop offset="35%" stop-color="#ffd24d" stop-opacity="0.85" />
-                                    <stop offset="75%" stop-color="#ff9900" stop-opacity="0.25" />
-                                    <stop offset="100%" stop-color="#ff9900" stop-opacity="0" />
-                                </radialGradient>
-                                <linearGradient id="metal" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" stop-color="#0a2540" />
-                                    <stop offset="30%" stop-color="#1e4e8c" />
-                                    <stop offset="50%" stop-color="#3b82f6" />
-                                    <stop offset="70%" stop-color="#1e4e8c" />
-                                    <stop offset="100%" stop-color="#0a2540" />
-                                </linearGradient>
-                                <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" stop-color="#b8860b" />
-                                    <stop offset="50%" stop-color="#ffd700" />
-                                    <stop offset="100%" stop-color="#b8860b" />
-                                </linearGradient>
-                            </defs>
-                            
-                            <!-- Glowing background -->
-                            <circle cx="150" cy="140" r="90" fill="url(#glow)" />
-                            
-                            <!-- Rays -->
-                            <path d="M150 40 L150 15 M250 140 L275 140 M50 140 L25 140 M80 70 L62 52 M220 70 L238 52" stroke="#ffd700" stroke-width="3" stroke-linecap="round" opacity="0.7" />
-                            
-                            <!-- Sparkles -->
-                            <path d="M75 95 L80 100 L75 105 L70 100 Z" fill="#ffd700" />
-                            <path d="M225 95 L230 100 L225 105 L220 100 Z" fill="#ffd700" />
-                            <path d="M110 45 L113 48 L110 51 L107 48 Z" fill="#ffd700" />
-                            <path d="M190 45 L193 48 L190 51 L187 48 Z" fill="#ffd700" />
-                            
-                            <!-- Lantern loop -->
-                            <circle cx="150" cy="40" r="16" stroke="url(#gold)" stroke-width="6" fill="none" />
-                            
-                            <!-- Cap / Hood -->
-                            <path d="M120 70 L180 70 L170 56 L130 56 Z" fill="url(#metal)" stroke="url(#gold)" stroke-width="2" />
-                            <rect x="110" y="70" width="80" height="8" rx="4" fill="url(#gold)" />
-                            <path d="M115 78 C115 78 120 98 150 98 C180 98 185 78 185 78 Z" fill="url(#metal)" />
-                            
-                            <!-- Protective cage wire guards -->
-                            <path d="M110 98 C80 140 80 200 110 242" stroke="url(#metal)" stroke-width="8" stroke-linecap="round" fill="none" />
-                            <path d="M190 98 C220 140 220 200 190 242" stroke="url(#metal)" stroke-width="8" stroke-linecap="round" fill="none" />
-                            
-                            <!-- Glass globe -->
-                            <path d="M120 98 L180 98 L190 220 L110 220 Z" fill="#ffea9f" fill-opacity="0.25" stroke="url(#gold)" stroke-width="2" />
-                            <path d="M115 150 C115 150 135 130 150 130 C165 130 185 150 185 150" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.4" />
-                            
-                            <!-- Flame -->
-                            <path d="M150 195 C135 195 130 170 150 135 C170 170 165 195 150 195 Z" fill="#ff6600" />
-                            <path d="M150 195 C140 195 137 180 150 155 C163 180 160 195 150 195 Z" fill="#ffcc00" />
-                            <path d="M150 195 C145 195 143 188 150 170 C157 188 155 195 150 195 Z" fill="#ffffff" />
-                            
-                            <!-- Tank base -->
-                            <path d="M100 242 L200 242 L210 290 L90 290 Z" fill="url(#metal)" stroke="url(#gold)" stroke-width="2" />
-                            <rect x="95" y="242" width="110" height="12" rx="4" fill="url(#gold)" />
-                            
-                            <!-- Golden heart/figures emblem inside base -->
-                            <path d="M150 282 C142 272 132 274 132 264 C132 258 138 258 142 264 C144 266 148 266 150 262 C152 266 156 266 158 264 C162 258 168 258 168 264 C168 274 158 272 150 282 Z" fill="#ffd700" />
-                            <circle cx="142" cy="254" r="3.5" fill="#ffd700" />
-                            <circle cx="158" cy="254" r="3.5" fill="#ffd700" />
-                            
-                            <rect x="80" y="290" width="140" height="10" rx="3" fill="url(#gold)" />
-                            
-                            <!-- Wreath leaves under the lantern -->
-                            <path d="M80 250 Q60 210 80 180 M220 250 Q240 210 220 180" stroke="#85af5d" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.8" />
-                            <path d="M74 230 C64 228 64 220 74 222 Z" fill="#85af5d" />
-                            <path d="M68 208 C58 206 58 198 68 200 Z" fill="#85af5d" />
-                            <path d="M226 230 C236 228 236 220 226 222 Z" fill="#85af5d" />
-                            <path d="M232 208 C242 206 242 198 232 200 Z" fill="#85af5d" />
-                        </svg>
+                        <div class="bg-white p-3.5 sm:p-4 rounded-3xl shadow-[0_12px_35px_rgba(0,0,0,0.35)] border border-white/20 max-w-[175px] sm:max-w-[200px] flex items-center justify-center transition-all duration-300 hover:scale-[1.03]">
+                            <img src="{{ asset('images/logo-lentera.png') }}" alt="Logo Model LENTERA" class="w-full h-auto object-contain rounded-2xl drop-shadow-sm">
+                        </div>
                     </div>
-
-                    <h1 class="text-white text-5xl font-extrabold tracking-widest text-center mt-6">LENTERA</h1>
                     <p class="text-xs sm:text-sm font-semibold text-[#adc7ff] tracking-wide text-center mt-3">
                         Learning <span class="text-amber-400">Empathy</span> through<br>Structured Learning Approach
                     </p>

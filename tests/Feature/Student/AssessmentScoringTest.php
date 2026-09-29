@@ -122,4 +122,38 @@ class AssessmentScoringTest extends TestCase
         $this->assertNotNull($evaluation);
         $this->assertEquals(7, $evaluation->self_score);
     }
+
+    public function test_adding_new_assessment_to_module_does_not_cause_redirect_loop_when_student_has_prior_evaluation(): void
+    {
+        // 1. Student completed first assessment (Penilaian Diri) and evaluation has self_score
+        StudentEvaluation::create([
+            'student_id' => $this->student->id,
+            'module_id' => $this->module->id,
+            'self_score' => 15,
+            'lkpd_score' => 18,
+            'commitment_score' => 5,
+        ]);
+
+        // 2. Admin adds a new assessment (e.g. Refleksi Diri) to the same module
+        $newAssessment = Assessment::create([
+            'module_id' => $this->module->id,
+            'judul' => 'Refleksi Diri Kasus Baru',
+            'jenis' => 'refleksi_diri',
+            'urutan' => 2,
+        ]);
+
+        // 3. Student visits show page for the newly added assessment
+        $response = $this->actingAs($this->studentUser)
+            ->get(route('student.assessment.show', $newAssessment->id));
+
+        // It must NOT redirect in an infinite loop; it must render show view with 200 OK
+        $response->assertStatus(200);
+        $response->assertSee('Refleksi Diri Kasus Baru');
+
+        // 4. Visiting result before submitting should redirect cleanly to show without looping
+        $resultResponse = $this->actingAs($this->studentUser)
+            ->get(route('student.assessment.result', $newAssessment->id));
+
+        $resultResponse->assertRedirect(route('student.assessment.show', $newAssessment->id));
+    }
 }

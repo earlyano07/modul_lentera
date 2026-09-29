@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\Kelas;
+use App\Models\School;
 use App\Models\User;
 use App\Models\Role;
 use Illuminate\Http\Request;
@@ -16,18 +17,39 @@ class StudentController extends Controller
     public function index(Request $request)
     {
         $query = Student::with(['user', 'kelas.school']);
+
+        if ($request->filled('school_id')) {
+            $query->whereHas('kelas', function ($q) use ($request) {
+                $q->where('school_id', $request->school_id);
+            });
+        }
+
         if ($request->filled('kelas_id')) {
             $query->where('kelas_id', $request->kelas_id);
         }
         $students = $query->latest()->get();
         $kelasList = Kelas::with('school')->get();
-        return view('admin.students.index', compact('students', 'kelasList'));
+        $schools = School::where('status', true)->orderBy('nama')->get();
+        $classesData = $kelasList->map(fn($k) => [
+            'id' => $k->id,
+            'nama_kelas' => $k->nama_kelas,
+            'tingkat' => $k->tingkat,
+            'school_id' => $k->school_id,
+        ])->values();
+        return view('admin.students.index', compact('students', 'kelasList', 'schools', 'classesData'));
     }
 
     public function create()
     {
         $kelasList = Kelas::with('school')->get();
-        return view('admin.students.create', compact('kelasList'));
+        $schools = School::where('status', true)->orderBy('nama')->get();
+        $classesData = $kelasList->map(fn($k) => [
+            'id' => $k->id,
+            'nama_kelas' => $k->nama_kelas,
+            'tingkat' => $k->tingkat,
+            'school_id' => $k->school_id,
+        ])->values();
+        return view('admin.students.create', compact('kelasList', 'schools', 'classesData'));
     }
 
     public function store(Request $request)
@@ -37,6 +59,7 @@ class StudentController extends Controller
             'username' => 'nullable|string|max:255|unique:users,username',
             'email' => 'nullable|email|unique:users,email',
             'password' => 'required|string|min:8',
+            'school_id' => 'nullable|exists:schools,id',
             'kelas_id' => 'required|exists:kelas,id',
             'nis' => 'required|string|max:50',
             'jenis_kelamin' => 'required|in:L,P',
@@ -75,14 +98,24 @@ class StudentController extends Controller
                 'tanggal_lahir' => $validated['tanggal_lahir'],
             ]);
         });
+        if ($request->filled('_redirect_to')) {
+            return redirect($request->input('_redirect_to'))->with('success', 'Siswa berhasil ditambahkan.');
+        }
         return redirect()->route('admin.students.index')->with('success', 'Siswa berhasil ditambahkan.');
     }
 
     public function edit(Student $student)
     {
-        $student->load('user');
+        $student->load(['user', 'kelas.school']);
         $kelasList = Kelas::with('school')->get();
-        return view('admin.students.edit', compact('student', 'kelasList'));
+        $schools = School::where('status', true)->orderBy('nama')->get();
+        $classesData = $kelasList->map(fn($k) => [
+            'id' => $k->id,
+            'nama_kelas' => $k->nama_kelas,
+            'tingkat' => $k->tingkat,
+            'school_id' => $k->school_id,
+        ])->values();
+        return view('admin.students.edit', compact('student', 'kelasList', 'schools', 'classesData'));
     }
 
     public function update(Request $request, Student $student)
@@ -92,6 +125,7 @@ class StudentController extends Controller
             'username' => 'nullable|string|max:255|unique:users,username,' . $student->user_id,
             'email' => 'nullable|email|unique:users,email,' . $student->user_id,
             'password' => 'nullable|string|min:8',
+            'school_id' => 'nullable|exists:schools,id',
             'kelas_id' => 'required|exists:kelas,id',
             'nis' => 'required|string|max:50',
             'jenis_kelamin' => 'required|in:L,P',
@@ -126,7 +160,14 @@ class StudentController extends Controller
     public function importForm()
     {
         $kelasList = Kelas::with('school')->get();
-        return view('admin.students.import', compact('kelasList'));
+        $schools = School::where('status', true)->orderBy('nama')->get();
+        $classesData = $kelasList->map(fn($k) => [
+            'id' => $k->id,
+            'nama_kelas' => $k->nama_kelas,
+            'tingkat' => $k->tingkat,
+            'school_id' => $k->school_id,
+        ])->values();
+        return view('admin.students.import', compact('kelasList', 'schools', 'classesData'));
     }
 
     public function import(Request $request)

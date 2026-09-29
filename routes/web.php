@@ -17,6 +17,7 @@ use App\Http\Controllers\Counselor\LayananController;
 use App\Http\Controllers\Counselor\EvaluasiController;
 use App\Http\Controllers\Counselor\ProfilEmpatiController;
 use App\Http\Controllers\Counselor\SettingsController;
+use App\Http\Controllers\Counselor\ProfileController as CounselorProfileController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Student\LearningController;
 use App\Http\Controllers\Student\AssessmentController as StudentAssessmentController;
@@ -105,11 +106,17 @@ Route::prefix('counselor')
         Route::get('/layanan', [LayananController::class, 'index'])->name('layanan');
         Route::get('/layanan/{module}', [LayananController::class, 'show'])->name('layanan.show');
 
-        // Placeholders
+        // Placeholders & Settings
         Route::get('/evaluasi', [EvaluasiController::class, 'index'])->name('evaluasi');
         Route::post('/evaluasi', [EvaluasiController::class, 'store'])->name('evaluasi.store');
         Route::get('/profil-empati', [ProfilEmpatiController::class, 'index'])->name('profil-empati');
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+
+        // Profile Management
+        Route::get('/profile', [CounselorProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [CounselorProfileController::class, 'updateProfile'])->name('profile.update');
+        Route::put('/profile/username', [CounselorProfileController::class, 'updateUsername'])->name('profile.update-username');
+        Route::put('/profile/password', [CounselorProfileController::class, 'updatePassword'])->name('profile.update-password');
 
         // Certificate
         Route::get('/students/{student}/certificate', [CounselorCertificateController::class, 'show'])->name('monitoring.student.certificate');
